@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/AxMdv/go-url-shortener/internal/storage"
+	"github.com/AxMdv/go-url-shortener/internal/app/storage"
 )
 
 func (serC *ServerConnector) HandleMethod(w http.ResponseWriter, r *http.Request) {

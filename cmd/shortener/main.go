@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
-	"github.com/AxMdv/go-url-shortener/internal/handlers"
-	"github.com/AxMdv/go-url-shortener/internal/storage"
+	"github.com/AxMdv/go-url-shortener/internal/app/handlers"
+	"github.com/AxMdv/go-url-shortener/internal/app/storage"
 )
 
 func main() {
