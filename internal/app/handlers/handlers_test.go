@@ -39,6 +39,8 @@ func TestServerConnector_HandleMethod(t *testing.T) {
 			w := httptest.NewRecorder()
 			tt.serC.HandleMethod(w, request)
 			result := w.Result()
+			err := result.Body.Close()
+			require.NoError(t, err)
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 		})
 	}
@@ -126,6 +128,9 @@ func TestServerConnector_HandleGetMain(t *testing.T) {
 
 			assert.Equal(t, tt.want.respHeaderLocation, result.Header.Get("Location"))
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
+			err := result.Body.Close()
+			require.NoError(t, err)
+
 		})
 	}
 }
