@@ -7,23 +7,10 @@ import (
 	"net/http"
 
 	"github.com/AxMdv/go-url-shortener/internal/app/storage"
+	"github.com/go-chi/chi/v5"
 )
 
-func (serC *ServerConnector) HandleMethod(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		serC.HandleGetMain(w, r)
-	case http.MethodPost:
-		serC.HandlePostMain(w, r)
-	default:
-		http.Error(w, "Method is not allowed", http.StatusMethodNotAllowed)
-	}
-}
-
 func (serC *ServerConnector) HandlePostMain(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-	}
 	longURL, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -44,13 +31,13 @@ func shortenURL(longURL []byte) string {
 }
 
 func (serC *ServerConnector) HandleGetMain(w http.ResponseWriter, r *http.Request) {
-	shortenedURL := r.URL.Path[1:]
+	shortenedURL := chi.URLParam(r, "shortenedURL")
 	longURL, found := serC.StC.FindShortenedURL(shortenedURL)
-	if found {
+	if !found {
+		w.WriteHeader(http.StatusBadRequest)
+	} else {
 		w.Header().Add("Location", string(longURL))
 		w.WriteHeader(http.StatusTemporaryRedirect)
-	} else {
-		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 
