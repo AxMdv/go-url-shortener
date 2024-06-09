@@ -98,7 +98,7 @@ func TestServerConnector_HandleGetMain(t *testing.T) {
 			}
 			resp, err := client.Do(request)
 			require.NoError(t, err)
-
+			defer resp.Body.Close()
 			assert.Equal(t, tt.want.respHeaderLocation, resp.Header.Get("Location"))
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 
