@@ -9,7 +9,7 @@ var Flags struct {
 
 func init() {
 	Flags.RunAddr = flag.String("a", "localhost:8080", "address and port to run server")
-	Flags.ResponseResultAddr = flag.String("b", "http://localhost:8080/", "resut basic response address (before shortened URL)")
+	Flags.ResponseResultAddr = flag.String("b", "http://localhost:8080", "resut basic response address (before shortened URL)")
 }
 
 // func ParseFlags() {

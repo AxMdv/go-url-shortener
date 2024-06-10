@@ -19,7 +19,7 @@ func (serC *ServerConnector) HandlePostMain(w http.ResponseWriter, r *http.Reque
 	}
 	shortenedURL := shortenURL(longURL)
 	serC.StC.AddURL(longURL, shortenedURL)
-	res := fmt.Sprintf("%s%s", *config.Flags.ResponseResultAddr, shortenedURL)
+	res := fmt.Sprintf("%s/%s", *config.Flags.ResponseResultAddr, shortenedURL)
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(res))
