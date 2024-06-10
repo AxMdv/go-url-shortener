@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/AxMdv/go-url-shortener/internal/app/config"
 	"github.com/AxMdv/go-url-shortener/internal/app/storage"
 	"github.com/go-chi/chi/v5"
 )
@@ -18,7 +19,7 @@ func (serC *ServerConnector) HandlePostMain(w http.ResponseWriter, r *http.Reque
 	}
 	shortenedURL := shortenURL(longURL)
 	serC.StC.AddURL(longURL, shortenedURL)
-	res := fmt.Sprintf(`http://localhost:8080/%s`, shortenedURL)
+	res := fmt.Sprintf("%s%s", *config.Flags.ResponseResultAddr, shortenedURL)
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(res))
