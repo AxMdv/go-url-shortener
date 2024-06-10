@@ -16,7 +16,6 @@ func (serC *ServerConnector) HandlePostMain(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	defer r.Body.Close()
 	shortenedURL := shortenURL(longURL)
 	serC.StC.AddURL(longURL, shortenedURL)
 	res := fmt.Sprintf(`http://localhost:8080/%s`, shortenedURL)
