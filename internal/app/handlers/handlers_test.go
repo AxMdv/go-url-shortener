@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/AxMdv/go-url-shortener/internal/app/config"
 	"github.com/AxMdv/go-url-shortener/internal/app/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -40,6 +41,7 @@ func TestServerConnector_HandlePostMain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			config.ParseOptions()
 			reqBody := bytes.NewReader([]byte(tt.reqBody))
 			request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
 			w := httptest.NewRecorder()
