@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"net/http"
 
@@ -12,12 +11,12 @@ import (
 )
 
 func main() {
-	flag.Parse()
+	config.ParseOptions()
 	serC := handlers.ServerConnector{StC: &storage.StorageConnector{MapURL: make(map[string][]byte)}}
 
 	r := chi.NewRouter()
 	r.Post("/", serC.HandlePostMain)
 	r.Get("/{shortenedURL}", serC.HandleGetMain)
 
-	log.Fatal(http.ListenAndServe(*config.Flags.RunAddr, r))
+	log.Fatal(http.ListenAndServe(config.Options.RunAddr, r))
 }
