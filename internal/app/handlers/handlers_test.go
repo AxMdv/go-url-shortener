@@ -22,14 +22,14 @@ func TestServerConnector_HandlePostMain(t *testing.T) {
 	}
 	tests := []struct {
 		name       string
-		serC       *ServerConnector
+		serC       *ShortenerHandlers
 		requestURL string
 		reqBody    string
 		want       want
 	}{
 		{
 			name:       "Positive test #1",
-			serC:       &ServerConnector{StC: &storage.StorageConnector{MapURL: map[string][]byte{}}},
+			serC:       &ShortenerHandlers{R: &storage.Repository{MapURL: map[string][]byte{}}},
 			requestURL: "/",
 			reqBody:    "https://yandex.ru",
 			want: want{
@@ -68,13 +68,13 @@ func TestServerConnector_HandleGetMain(t *testing.T) {
 	}
 	tests := []struct {
 		name        string
-		serC        *ServerConnector
+		serC        *ShortenerHandlers
 		requestPath string
 		want        want
 	}{
 		{
 			name: "Positive test #1",
-			serC: &ServerConnector{StC: &storage.StorageConnector{MapURL: map[string][]byte{
+			serC: &ShortenerHandlers{R: &storage.Repository{MapURL: map[string][]byte{
 				"aHR0cHM6Ly95YW5kZXgucnU": []byte("https://yandex.ru")}},
 			},
 			requestPath: "/aHR0cHM6Ly95YW5kZXgucnU",
