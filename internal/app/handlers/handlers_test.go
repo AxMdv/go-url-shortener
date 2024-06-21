@@ -8,43 +8,10 @@ import (
 	"testing"
 
 	"github.com/AxMdv/go-url-shortener/internal/app/storage"
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestServerConnector_HandleMethod(t *testing.T) {
-	type want struct {
-		statusCode int
-	}
-	tests := []struct {
-		name          string
-		serC          *ServerConnector
-		requestURL    string
-		requestMethod string
-		want          want
-	}{
-		{
-			name:          "Negative test #1",
-			serC:          &ServerConnector{StC: &storage.StorageConnector{MapURL: map[string][]byte{}}},
-			requestURL:    "/",
-			requestMethod: "PUT",
-			want: want{
-				statusCode: 405,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			request := httptest.NewRequest(tt.requestMethod, tt.requestURL, nil)
-			w := httptest.NewRecorder()
-			tt.serC.HandleMethod(w, request)
-			result := w.Result()
-			err := result.Body.Close()
-			require.NoError(t, err)
-			assert.Equal(t, tt.want.statusCode, result.StatusCode)
-		})
-	}
-}
 
 func TestServerConnector_HandlePostMain(t *testing.T) {
 	type want struct {
@@ -93,26 +60,22 @@ func TestServerConnector_HandlePostMain(t *testing.T) {
 }
 
 func TestServerConnector_HandleGetMain(t *testing.T) {
-	// type args struct {
-	// 	w http.ResponseWriter
-	// 	r *http.Request
-	// }
 	type want struct {
 		respHeaderLocation string
 		statusCode         int
 	}
 	tests := []struct {
-		name       string
-		serC       *ServerConnector
-		requestURL string
-		want       want
+		name        string
+		serC        *ServerConnector
+		requestPath string
+		want        want
 	}{
 		{
 			name: "Positive test #1",
 			serC: &ServerConnector{StC: &storage.StorageConnector{MapURL: map[string][]byte{
 				"aHR0cHM6Ly95YW5kZXgucnU": []byte("https://yandex.ru")}},
 			},
-			requestURL: "http://localhost:8080/aHR0cHM6Ly95YW5kZXgucnU",
+			requestPath: "/aHR0cHM6Ly95YW5kZXgucnU",
 			want: want{
 				respHeaderLocation: "https://yandex.ru",
 				statusCode:         307,
@@ -121,36 +84,24 @@ func TestServerConnector_HandleGetMain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodGet, tt.requestURL, nil)
-			w := httptest.NewRecorder()
-			tt.serC.HandleGetMain(w, request)
-			result := w.Result()
+			r := chi.NewRouter()
+			r.Get("/{shortenedURL}", tt.serC.HandleGetMain)
+			ts := httptest.NewServer(r)
+			defer ts.Close()
 
-			assert.Equal(t, tt.want.respHeaderLocation, result.Header.Get("Location"))
-			assert.Equal(t, tt.want.statusCode, result.StatusCode)
-			err := result.Body.Close()
+			request, err := http.NewRequest(http.MethodGet, ts.URL+(tt.requestPath), nil)
 			require.NoError(t, err)
-
-		})
-	}
-}
-
-func Test_shortenURL(t *testing.T) {
-	type args struct {
-		longURL []byte
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := shortenURL(tt.args.longURL); got != tt.want {
-				t.Errorf("shortenURL() = %v, want %v", got, tt.want)
+			client := &http.Client{
+				CheckRedirect: func(req *http.Request, via []*http.Request) error {
+					return http.ErrUseLastResponse
+				},
 			}
+			resp, err := client.Do(request)
+			require.NoError(t, err)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.respHeaderLocation, resp.Header.Get("Location"))
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
 		})
 	}
 }

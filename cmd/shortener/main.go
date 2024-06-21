@@ -1,18 +1,20 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/AxMdv/go-url-shortener/internal/app/handlers"
 	"github.com/AxMdv/go-url-shortener/internal/app/storage"
+	"github.com/go-chi/chi/v5"
 )
 
 func main() {
 	serC := handlers.ServerConnector{StC: &storage.StorageConnector{MapURL: make(map[string][]byte)}}
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", serC.HandleMethod)
-	err := http.ListenAndServe(":8080", mux)
-	if err != nil {
-		panic(err)
-	}
+
+	r := chi.NewRouter()
+	r.Post("/", serC.HandlePostMain)
+	r.Get("/{shortenedURL}", serC.HandleGetMain)
+
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
