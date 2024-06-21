@@ -1,21 +1,24 @@
 package config
 
-import "flag"
+import (
+	"flag"
+	"os"
+)
 
-var Flags struct {
-	RunAddr            *string
-	ResponseResultAddr *string
+var Options struct {
+	RunAddr            string
+	ResponseResultAddr string
 }
 
-func init() {
-	Flags.RunAddr = flag.String("a", "localhost:8080", "address and port to run server")
-	Flags.ResponseResultAddr = flag.String("b", "http://localhost:8080", "resut basic response address (before shortened URL)")
-}
+func ParseOptions() {
+	flag.StringVar(&Options.RunAddr, "a", ":8080", "address and port to run server")
+	flag.StringVar(&Options.ResponseResultAddr, "b", "http://localhost:8080", "resut basic response address (before shortened URL)")
+	flag.Parse()
 
-// func ParseFlags() {
-// 	// регистрируем переменную flagRunAddr
-// 	// как аргумент -a со значением :8080 по умолчанию
-// 	flag.StringVar(&Flags.RunAddr, "a", "localhost:8080", "address and port to run server")
-// 	// парсим переданные серверу аргументы в зарегистрированные переменные
-// 	flag.Parse()
-// }
+	if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
+		Options.RunAddr = envRunAddr
+	}
+	if envResultAddr := os.Getenv("BASE_URL"); envResultAddr != "" {
+		Options.ResponseResultAddr = envResultAddr
+	}
+}
