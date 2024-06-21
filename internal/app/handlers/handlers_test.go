@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/AxMdv/go-url-shortener/internal/app/config"
 	"github.com/AxMdv/go-url-shortener/internal/app/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -22,14 +21,14 @@ func TestServerConnector_HandlePostMain(t *testing.T) {
 	}
 	tests := []struct {
 		name       string
-		serC       *ShortenerHandlers
+		serC       *ServerConnector
 		requestURL string
 		reqBody    string
 		want       want
 	}{
 		{
 			name:       "Positive test #1",
-			serC:       &ShortenerHandlers{R: &storage.Repository{MapURL: map[string][]byte{}}},
+			serC:       &ServerConnector{StC: &storage.StorageConnector{MapURL: map[string][]byte{}}},
 			requestURL: "/",
 			reqBody:    "https://yandex.ru",
 			want: want{
@@ -41,7 +40,6 @@ func TestServerConnector_HandlePostMain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			config.ParseOptions()
 			reqBody := bytes.NewReader([]byte(tt.reqBody))
 			request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
 			w := httptest.NewRecorder()
@@ -68,13 +66,13 @@ func TestServerConnector_HandleGetMain(t *testing.T) {
 	}
 	tests := []struct {
 		name        string
-		serC        *ShortenerHandlers
+		serC        *ServerConnector
 		requestPath string
 		want        want
 	}{
 		{
 			name: "Positive test #1",
-			serC: &ShortenerHandlers{R: &storage.Repository{MapURL: map[string][]byte{
+			serC: &ServerConnector{StC: &storage.StorageConnector{MapURL: map[string][]byte{
 				"aHR0cHM6Ly95YW5kZXgucnU": []byte("https://yandex.ru")}},
 			},
 			requestPath: "/aHR0cHM6Ly95YW5kZXgucnU",

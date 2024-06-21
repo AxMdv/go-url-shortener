@@ -13,13 +13,13 @@ func TestStorageConnector_FindShortenedURL(t *testing.T) {
 	}
 	tests := []struct {
 		name         string
-		stC          *Repository
+		stC          *StorageConnector
 		shortenedURL string
 		want         want
 	}{
 		{
 			name: "Positive test #1",
-			stC: &Repository{MapURL: map[string][]byte{
+			stC: &StorageConnector{MapURL: map[string][]byte{
 				"aHR0cHM6Ly95YW5kZXgucnU": []byte("https://yandex.ru")}},
 			shortenedURL: "aHR0cHM6Ly95YW5kZXgucnU",
 			want: want{
@@ -29,7 +29,7 @@ func TestStorageConnector_FindShortenedURL(t *testing.T) {
 		},
 		{
 			name:         "Negative test #2",
-			stC:          &Repository{MapURL: map[string][]byte{}},
+			stC:          &StorageConnector{MapURL: map[string][]byte{}},
 			shortenedURL: "aHR0cHM6Ly95YW5kZXgucnU",
 			want: want{
 				longURL: []byte(nil),
@@ -53,14 +53,14 @@ func TestStorageConnector_AddURL(t *testing.T) {
 	}
 	tests := []struct {
 		name         string
-		stC          *Repository
+		stC          *StorageConnector
 		longURL      []byte
 		shortenedURL string
 		want         want
 	}{
 		{
 			name:         "Positive test #1",
-			stC:          &Repository{MapURL: map[string][]byte{}},
+			stC:          &StorageConnector{MapURL: map[string][]byte{}},
 			longURL:      []byte("https://yandex.ru"),
 			shortenedURL: "aHR0cHM6Ly95YW5kZXgucnU",
 			want: want{

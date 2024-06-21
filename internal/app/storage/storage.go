@@ -1,15 +1,15 @@
 package storage
 
-type Repository struct {
+type StorageConnector struct {
 	MapURL map[string][]byte
 }
 
-func (r *Repository) AddURL(longURL []byte, shortenedURL string) {
-	r.MapURL[shortenedURL] = longURL
+func (stC *StorageConnector) AddURL(longURL []byte, shortenedURL string) {
+	stC.MapURL[shortenedURL] = longURL
 }
 
-func (r *Repository) FindShortenedURL(shortenedURL string) ([]byte, bool) {
-	longURL := r.MapURL[shortenedURL]
+func (stC *StorageConnector) FindShortenedURL(shortenedURL string) ([]byte, bool) {
+	longURL := stC.MapURL[shortenedURL]
 	found := true
 	if longURL == nil {
 		found = false
