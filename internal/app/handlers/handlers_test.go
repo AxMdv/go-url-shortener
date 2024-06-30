@@ -29,7 +29,7 @@ func TestServerConnector_HandlePostMain(t *testing.T) {
 	}{
 		{
 			name:       "Positive test #1",
-			serC:       &ShortenerHandlers{R: &storage.Repository{MapURL: map[string][]byte{}}},
+			serC:       &ShortenerHandlers{Repository: &storage.Repository{MapURL: map[string][]byte{}}},
 			requestURL: "/",
 			reqBody:    "https://yandex.ru",
 			want: want{
@@ -45,7 +45,7 @@ func TestServerConnector_HandlePostMain(t *testing.T) {
 			reqBody := bytes.NewReader([]byte(tt.reqBody))
 			request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
 			w := httptest.NewRecorder()
-			tt.serC.HandlePostMain(w, request)
+			tt.serC.CreateShortUrl(w, request)
 			result := w.Result()
 
 			resultURL, err := io.ReadAll(result.Body)
@@ -74,7 +74,7 @@ func TestServerConnector_HandleGetMain(t *testing.T) {
 	}{
 		{
 			name: "Positive test #1",
-			serC: &ShortenerHandlers{R: &storage.Repository{MapURL: map[string][]byte{
+			serC: &ShortenerHandlers{Repository: &storage.Repository{MapURL: map[string][]byte{
 				"aHR0cHM6Ly95YW5kZXgucnU": []byte("https://yandex.ru")}},
 			},
 			requestPath: "/aHR0cHM6Ly95YW5kZXgucnU",
@@ -87,7 +87,7 @@ func TestServerConnector_HandleGetMain(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := chi.NewRouter()
-			r.Get("/{shortenedURL}", tt.serC.HandleGetMain)
+			r.Get("/{shortenedURL}", tt.serC.GetLongUrl)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 

@@ -12,31 +12,26 @@ import (
 )
 
 type ShortenerHandlers struct {
-	R *storage.Repository
+	Repository *storage.Repository
 }
 
-func (s *ShortenerHandlers) HandlePostMain(w http.ResponseWriter, r *http.Request) {
+func (s *ShortenerHandlers) CreateShortUrl(w http.ResponseWriter, r *http.Request) {
 	longURL, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	shortenedURL := shortenURL(longURL)
-	s.R.AddURL(longURL, shortenedURL)
+	shortenedURL := base64.RawStdEncoding.EncodeToString(longURL)
+	s.Repository.AddURL(longURL, shortenedURL)
 	res := fmt.Sprintf("%s/%s", config.Options.ResponseResultAddr, shortenedURL)
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(res))
 }
 
-func shortenURL(longURL []byte) string {
-	res := base64.RawStdEncoding.EncodeToString(longURL)
-	return res
-}
-
-func (s *ShortenerHandlers) HandleGetMain(w http.ResponseWriter, r *http.Request) {
+func (s *ShortenerHandlers) GetLongUrl(w http.ResponseWriter, r *http.Request) {
 	shortenedURL := chi.URLParam(r, "shortenedURL")
-	longURL, found := s.R.FindShortenedURL(shortenedURL)
+	longURL, found := s.Repository.FindShortenedURL(shortenedURL)
 	if !found {
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
