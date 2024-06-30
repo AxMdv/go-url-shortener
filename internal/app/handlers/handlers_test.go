@@ -45,7 +45,7 @@ func TestServerConnector_HandlePostMain(t *testing.T) {
 			reqBody := bytes.NewReader([]byte(tt.reqBody))
 			request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
 			w := httptest.NewRecorder()
-			tt.serC.CreateShortUrl(w, request)
+			tt.serC.CreateShortURL(w, request)
 			result := w.Result()
 
 			resultURL, err := io.ReadAll(result.Body)
@@ -87,7 +87,7 @@ func TestServerConnector_HandleGetMain(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := chi.NewRouter()
-			r.Get("/{shortenedURL}", tt.serC.GetLongUrl)
+			r.Get("/{shortenedURL}", tt.serC.GetLongURL)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 

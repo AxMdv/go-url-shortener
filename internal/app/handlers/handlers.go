@@ -15,7 +15,7 @@ type ShortenerHandlers struct {
 	Repository *storage.Repository
 }
 
-func (s *ShortenerHandlers) CreateShortUrl(w http.ResponseWriter, r *http.Request) {
+func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 	longURL, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -29,7 +29,7 @@ func (s *ShortenerHandlers) CreateShortUrl(w http.ResponseWriter, r *http.Reques
 	w.Write([]byte(res))
 }
 
-func (s *ShortenerHandlers) GetLongUrl(w http.ResponseWriter, r *http.Request) {
+func (s *ShortenerHandlers) GetLongURL(w http.ResponseWriter, r *http.Request) {
 	shortenedURL := chi.URLParam(r, "shortenedURL")
 	longURL, found := s.Repository.FindShortenedURL(shortenedURL)
 	if !found {

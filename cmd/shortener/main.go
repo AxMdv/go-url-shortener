@@ -21,8 +21,8 @@ func main() {
 		fmt.Println("Failed to init logger")
 	}
 	r := chi.NewRouter()
-	r.Post("/", logger.WithLogging(s.CreateShortUrl))
-	r.Get("/{shortenedURL}", logger.WithLogging(s.GetLongUrl))
+	r.Post("/", logger.WithLogging(s.CreateShortURL))
+	r.Get("/{shortenedURL}", logger.WithLogging(s.GetLongURL))
 
 	log.Fatal(http.ListenAndServe(config.Options.RunAddr, r))
 }
