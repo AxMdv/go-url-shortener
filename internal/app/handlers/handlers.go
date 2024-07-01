@@ -54,6 +54,7 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 		return
 	}
 	shortenedURL := base64.RawStdEncoding.EncodeToString([]byte(request.URL))
+	s.Repository.AddURL([]byte(request.URL), shortenedURL)
 	response := model.Response{Result: shortenedURL}
 	resp, err := json.Marshal(response)
 	if err != nil {
