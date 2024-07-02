@@ -39,9 +39,10 @@ func TestServerConnector_CreateShortURL(t *testing.T) {
 			},
 		},
 	}
+	config.ParseOptions()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			config.ParseOptions()
+
 			reqBody := bytes.NewReader([]byte(tt.reqBody))
 			request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
 			w := httptest.NewRecorder()
@@ -84,6 +85,7 @@ func TestServerConnector_GetLongURL(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := chi.NewRouter()
@@ -131,7 +133,7 @@ func TestShortenerHandlers_CreateShortURLJson(t *testing.T) {
 			reqContentType: "application/json",
 			want: want{
 				contentType: "application/json",
-				respBody:    `{"result":"aHR0cHM6Ly95YW5kZXgucnU"}`,
+				respBody:    `{"result":"http://localhost:8080/aHR0cHM6Ly95YW5kZXgucnU"}`,
 				statusCode:  201,
 			},
 		},
