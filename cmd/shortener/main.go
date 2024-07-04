@@ -22,7 +22,7 @@ func main() {
 		fmt.Println("Failed to init logger")
 	}
 	r := chi.NewRouter()
-	r.Post("/", logger.WithLogging(compress.GzipMiddleware(s.CreateShortURL)))
+	r.Post("/", logger.WithLogging(s.CreateShortURL))
 	r.Get("/{shortenedURL}", logger.WithLogging(compress.GzipMiddleware(s.GetLongURL)))
 	r.Post("/api/shorten", logger.WithLogging(compress.GzipMiddleware(s.CreateShortURLJson)))
 
