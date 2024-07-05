@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/AxMdv/go-url-shortener/internal/app/config"
@@ -40,7 +41,7 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 			LongURL:      string(longURL),
 		})
 		if err != nil {
-			fmt.Println("Cant save urls to storage")
+			log.Panic("Cant save urls to storage", err)
 		}
 	}
 
@@ -81,7 +82,7 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 			LongURL:      request.URL,
 		})
 		if err != nil {
-			fmt.Println("Cant save urls to storage")
+			log.Panic("Cant save urls to storage", err)
 		}
 	}
 

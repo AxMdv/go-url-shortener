@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -16,11 +15,11 @@ func main() {
 	config.ParseOptions()
 	s, err := handlers.InitShortenerHandlers(config.Options.FileStorage)
 	if err != nil {
-		fmt.Println("Failed to init ShortenerHandlers", err)
+		log.Panic("Failed to init ShortenerHandlers", err)
 	}
 	err = logger.InitLogger()
 	if err != nil {
-		fmt.Println("Failed to init logger")
+		log.Panic("Failed to init logger", err)
 	}
 	r := chi.NewRouter()
 	r.Post("/", logger.WithLogging(compress.GzipMiddleware(s.CreateShortURL)))

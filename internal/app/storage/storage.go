@@ -13,11 +13,7 @@ type Repository struct {
 }
 
 func InitRepository(filename string) (*Repository, error) {
-	// recoverURL := RecoverURL{}
-	// err := recoverURL.Load("recover_url.json")
-	// if err == nil
-	// recoverURL := RecoverURL{Filename: filename}
-	// recoverURL.SaveFilename(recoverURL.Filename)
+
 	repository := &Repository{
 		MapURL:   make(map[string]string),
 		filename: filename,
@@ -64,8 +60,6 @@ func (r *Repository) FindShortenedURL(shortenedURL string) (string, bool) {
 	}
 	return longURL, true
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////
 
 type URLSaver struct {
 	file   *os.File
@@ -135,27 +129,3 @@ func (u *URLReader) ReadURL() error {
 func (u *URLReader) Close() error {
 	return u.file.Close()
 }
-
-// структура, запоминающая имя файла, в который сохранялись URL
-// type RecoverURL struct {
-//     Filename string `json:"recover_filename"`
-// }
-
-// func (r *RecoverURL) SaveFilename (fsname string) error {
-// 	data, err := json.MarshalIndent(r, "", "	")
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return os.WriteFile(fsname, data, 0666)
-// }
-
-// func (r *RecoverURL) Load(fsname string) error {
-//     data, err := os.ReadFile(fsname)
-//     if err != nil {
-//         return err
-//     }
-//     if err := json.Unmarshal(data, r); err != nil {
-//         return err
-//     }
-//     return nil
-// }
