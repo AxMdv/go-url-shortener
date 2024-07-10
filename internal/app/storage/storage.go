@@ -12,7 +12,7 @@ type Repository struct {
 	URLSaver *URLSaver
 }
 
-func InitRepository(filename string) (*Repository, error) {
+func NewRepository(filename string) (*Repository, error) {
 
 	repository := &Repository{
 		MapURL:   make(map[string]string),

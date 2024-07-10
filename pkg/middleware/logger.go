@@ -1,4 +1,4 @@
-package logger
+package middleware
 
 import (
 	"net/http"
@@ -39,9 +39,7 @@ func InitLogger() error {
 		return err
 	}
 	cfg := zap.NewProductionConfig()
-
 	cfg.Level = lvl
-
 	zl, err := cfg.Build()
 	if err != nil {
 		return err

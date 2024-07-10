@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	"github.com/AxMdv/go-url-shortener/internal/app/config"
-	"github.com/AxMdv/go-url-shortener/internal/app/model"
+
 	"github.com/AxMdv/go-url-shortener/internal/app/storage"
 	"github.com/go-chi/chi/v5"
 )
@@ -18,8 +18,8 @@ type ShortenerHandlers struct {
 	Repository *storage.Repository
 }
 
-func InitShortenerHandlers(filename string) (*ShortenerHandlers, error) {
-	repository, err := storage.InitRepository(filename)
+func NewShortenerHandlers(filename string) (*ShortenerHandlers, error) {
+	repository, err := storage.NewRepository(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 		http.Error(w, "Invalid Content-Type", http.StatusBadRequest)
 		return
 	}
-	var request model.Request
+	var request Request
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -87,7 +87,7 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 	}
 
 	res := fmt.Sprintf("%s/%s", config.Options.ResponseResultAddr, shortenedURL)
-	response := model.Response{Result: res}
+	response := Response{Result: res}
 	resp, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
