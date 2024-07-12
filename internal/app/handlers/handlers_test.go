@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestServerConnector_HandlePostMain(t *testing.T) {
+func TestServerConnector_CreateShortURL(t *testing.T) {
 	type want struct {
 		contentType string
 		respBody    string
@@ -39,9 +39,10 @@ func TestServerConnector_HandlePostMain(t *testing.T) {
 			},
 		},
 	}
+	config.ParseOptions()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			config.ParseOptions()
+
 			reqBody := bytes.NewReader([]byte(tt.reqBody))
 			request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
 			w := httptest.NewRecorder()
@@ -61,20 +62,20 @@ func TestServerConnector_HandlePostMain(t *testing.T) {
 	}
 }
 
-func TestServerConnector_HandleGetMain(t *testing.T) {
+func TestServerConnector_GetLongURL(t *testing.T) {
 	type want struct {
 		respHeaderLocation string
 		statusCode         int
 	}
 	tests := []struct {
 		name        string
-		serC        *ShortenerHandlers
+		s           *ShortenerHandlers
 		requestPath string
 		want        want
 	}{
 		{
 			name: "Positive test #1",
-			serC: &ShortenerHandlers{Repository: &storage.Repository{MapURL: map[string][]byte{
+			s: &ShortenerHandlers{Repository: &storage.Repository{MapURL: map[string][]byte{
 				"aHR0cHM6Ly95YW5kZXgucnU": []byte("https://yandex.ru")}},
 			},
 			requestPath: "/aHR0cHM6Ly95YW5kZXgucnU",
@@ -84,10 +85,11 @@ func TestServerConnector_HandleGetMain(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := chi.NewRouter()
-			r.Get("/{shortenedURL}", tt.serC.GetLongURL)
+			r.Get("/{shortenedURL}", tt.s.GetLongURL)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 
@@ -104,6 +106,56 @@ func TestServerConnector_HandleGetMain(t *testing.T) {
 			assert.Equal(t, tt.want.respHeaderLocation, resp.Header.Get("Location"))
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 
+		})
+	}
+}
+
+func TestShortenerHandlers_CreateShortURLJson(t *testing.T) {
+
+	type want struct {
+		contentType string
+		respBody    string
+		statusCode  int
+	}
+	tests := []struct {
+		name           string
+		s              *ShortenerHandlers
+		requestURL     string
+		reqBody        string
+		reqContentType string
+		want           want
+	}{
+		{
+			name:           "Positive test #1",
+			s:              &ShortenerHandlers{Repository: &storage.Repository{MapURL: map[string][]byte{}}},
+			requestURL:     "/api/shorten",
+			reqBody:        `{"url": "https://yandex.ru"} `,
+			reqContentType: "application/json",
+			want: want{
+				contentType: "application/json",
+				respBody:    `{"result":"http://localhost:8080/aHR0cHM6Ly95YW5kZXgucnU"}`,
+				statusCode:  201,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reqBody := bytes.NewReader([]byte(tt.reqBody))
+			request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
+			request.Header.Add("Content-Type", tt.reqContentType)
+			w := httptest.NewRecorder()
+			tt.s.CreateShortURLJson(w, request)
+			result := w.Result()
+
+			resultURL, err := io.ReadAll(result.Body)
+			require.NoError(t, err)
+			err = result.Body.Close()
+			require.NoError(t, err)
+			resultString := string(resultURL)
+
+			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
+			assert.Equal(t, tt.want.respBody, resultString)
+			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 		})
 	}
 }
