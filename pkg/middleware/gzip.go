@@ -3,6 +3,8 @@ package middleware
 import (
 	"net/http"
 	"strings"
+
+	"github.com/AxMdv/go-url-shortener/pkg/compressor"
 )
 
 func GzipMiddleware(h http.HandlerFunc) http.HandlerFunc {
@@ -11,7 +13,7 @@ func GzipMiddleware(h http.HandlerFunc) http.HandlerFunc {
 		acceptEncoding := r.Header.Get("Accept-Encoding")
 		supportsGzip := strings.Contains(acceptEncoding, "gzip")
 		if supportsGzip {
-			cw := NewCompressWriter(w)
+			cw := compressor.NewCompressWriter(w)
 			ow = cw
 			defer cw.Close()
 		}
@@ -19,7 +21,7 @@ func GzipMiddleware(h http.HandlerFunc) http.HandlerFunc {
 		contentEncoding := r.Header.Get("Content-Encoding")
 		sendsGzip := strings.Contains(contentEncoding, "gzip")
 		if sendsGzip {
-			cr, err := NewCompressReader(r.Body)
+			cr, err := compressor.NewCompressReader(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
