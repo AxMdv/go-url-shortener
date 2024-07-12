@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/AxMdv/go-url-shortener/pkg/logger"
+
 	"github.com/AxMdv/go-url-shortener/internal/app/config"
 	"github.com/AxMdv/go-url-shortener/internal/app/handlers"
 	"github.com/AxMdv/go-url-shortener/pkg/middleware"
@@ -16,7 +18,7 @@ func main() {
 	if err != nil {
 		log.Panic("Failed to init ShortenerHandlers", err)
 	}
-	err = middleware.InitLogger()
+	err = logger.InitLogger()
 	if err != nil {
 		log.Panic("Failed to init logger", err)
 	}
