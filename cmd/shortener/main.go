@@ -1,30 +1,29 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/AxMdv/go-url-shortener/internal/app/compress"
 	"github.com/AxMdv/go-url-shortener/internal/app/config"
 	"github.com/AxMdv/go-url-shortener/internal/app/handlers"
-	"github.com/AxMdv/go-url-shortener/internal/app/logger"
-	"github.com/AxMdv/go-url-shortener/internal/app/storage"
+	"github.com/AxMdv/go-url-shortener/pkg/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
 	config.ParseOptions()
-	s := handlers.ShortenerHandlers{Repository: &storage.Repository{MapURL: make(map[string][]byte)}}
-
-	err := logger.InitLogger()
+	s, err := handlers.NewShortenerHandlers(config.Options.FileStorage)
 	if err != nil {
-		fmt.Println("Failed to init logger")
+		log.Panic("Failed to init ShortenerHandlers", err)
+	}
+	err = middleware.InitLogger()
+	if err != nil {
+		log.Panic("Failed to init logger", err)
 	}
 	r := chi.NewRouter()
-	r.Post("/", logger.WithLogging(compress.GzipMiddleware(s.CreateShortURL)))
-	r.Get("/{shortenedURL}", logger.WithLogging(compress.GzipMiddleware(s.GetLongURL)))
-	r.Post("/api/shorten", logger.WithLogging(compress.GzipMiddleware(s.CreateShortURLJson)))
+	r.Post("/", middleware.WithLogging(middleware.GzipMiddleware(s.CreateShortURL)))
+	r.Get("/{shortenedURL}", middleware.WithLogging(middleware.GzipMiddleware(s.GetLongURL)))
+	r.Post("/api/shorten", middleware.WithLogging(middleware.GzipMiddleware(s.CreateShortURLJson)))
 
 	log.Fatal(http.ListenAndServe(config.Options.RunAddr, r))
 }

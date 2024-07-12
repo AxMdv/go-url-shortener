@@ -1,4 +1,4 @@
-package model
+package handlers
 
 type Request struct {
 	URL string `json:"url"`

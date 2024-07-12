@@ -29,7 +29,7 @@ func TestServerConnector_CreateShortURL(t *testing.T) {
 	}{
 		{
 			name:       "Positive test #1",
-			serC:       &ShortenerHandlers{Repository: &storage.Repository{MapURL: map[string][]byte{}}},
+			serC:       &ShortenerHandlers{Repository: &storage.Repository{MapURL: map[string]string{}}},
 			requestURL: "/",
 			reqBody:    "https://yandex.ru",
 			want: want{
@@ -75,8 +75,8 @@ func TestServerConnector_GetLongURL(t *testing.T) {
 	}{
 		{
 			name: "Positive test #1",
-			s: &ShortenerHandlers{Repository: &storage.Repository{MapURL: map[string][]byte{
-				"aHR0cHM6Ly95YW5kZXgucnU": []byte("https://yandex.ru")}},
+			s: &ShortenerHandlers{Repository: &storage.Repository{MapURL: map[string]string{
+				"aHR0cHM6Ly95YW5kZXgucnU": "https://yandex.ru"}},
 			},
 			requestPath: "/aHR0cHM6Ly95YW5kZXgucnU",
 			want: want{
@@ -127,7 +127,7 @@ func TestShortenerHandlers_CreateShortURLJson(t *testing.T) {
 	}{
 		{
 			name:           "Positive test #1",
-			s:              &ShortenerHandlers{Repository: &storage.Repository{MapURL: map[string][]byte{}}},
+			s:              &ShortenerHandlers{Repository: &storage.Repository{MapURL: map[string]string{}}},
 			requestURL:     "/api/shorten",
 			reqBody:        `{"url": "https://yandex.ru"} `,
 			reqContentType: "application/json",
