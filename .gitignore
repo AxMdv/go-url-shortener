@@ -23,4 +23,4 @@ vendor/
 .vscode
 
 #urs inside json
-tmp/
+#tmp/

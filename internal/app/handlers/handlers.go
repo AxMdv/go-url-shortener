@@ -100,3 +100,16 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusCreated)
 	w.Write(resp)
 }
+
+func (s *ShortenerHandlers) CheckDatabaseConnection(w http.ResponseWriter, r *http.Request) {
+	if config.Options.DataBaseDSN == "" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	err := storage.PingDatabase()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

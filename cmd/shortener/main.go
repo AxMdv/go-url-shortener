@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+
 	config.ParseOptions()
 	s, err := handlers.NewShortenerHandlers(config.Options.FileStorage)
 	if err != nil {
@@ -26,6 +27,7 @@ func main() {
 	r.Post("/", middleware.WithLogging(middleware.GzipMiddleware(s.CreateShortURL)))
 	r.Get("/{shortenedURL}", middleware.WithLogging(s.GetLongURL))
 	r.Post("/api/shorten", middleware.WithLogging(middleware.GzipMiddleware(s.CreateShortURLJson)))
+	r.Get("/ping", middleware.WithLogging(s.CheckDatabaseConnection))
 
 	log.Fatal(http.ListenAndServe(config.Options.RunAddr, r))
 }
