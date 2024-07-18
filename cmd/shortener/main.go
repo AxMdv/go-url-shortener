@@ -14,10 +14,11 @@ import (
 
 func main() {
 
-	config.ParseOptions()
-	s, err := handlers.NewShortenerHandlers(config.Options.FileStorage)
+	cfg := config.ParseOptions()
+
+	s, err := handlers.NewShortenerHandlers(cfg)
 	if err != nil {
-		log.Panic("Failed to init ShortenerHandlers ", err)
+		log.Panic(err)
 	}
 	err = logger.InitLogger()
 	if err != nil {
@@ -29,5 +30,5 @@ func main() {
 	r.Post("/api/shorten", middleware.WithLogging(middleware.GzipMiddleware(s.CreateShortURLJson)))
 	r.Get("/ping", middleware.WithLogging(s.CheckDatabaseConnection))
 
-	log.Fatal(http.ListenAndServe(config.Options.RunAddr, r))
+	log.Fatal(http.ListenAndServe(cfg.RunAddr, r))
 }
