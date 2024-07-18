@@ -1,19 +1,19 @@
 package storage
 
-type RamRepository struct {
+type RAMRepository struct {
 	MapURL map[string]string
 }
 
-func NewRAMRepository() (*RamRepository, error) {
-	return &RamRepository{MapURL: make(map[string]string)}, nil
+func NewRAMRepository() (*RAMRepository, error) {
+	return &RAMRepository{MapURL: make(map[string]string)}, nil
 }
 
-func (rr *RamRepository) AddURL(formedURL *FormedURL) error {
+func (rr *RAMRepository) AddURL(formedURL *FormedURL) error {
 	rr.MapURL[formedURL.ShortenedURL] = formedURL.LongURL
 	return nil
 }
 
-func (rr *RamRepository) GetURL(shortenedURL string) (string, bool) {
+func (rr *RAMRepository) GetURL(shortenedURL string) (string, bool) {
 	longURL := rr.MapURL[shortenedURL]
 	if longURL == "" {
 		return "", false
@@ -21,6 +21,6 @@ func (rr *RamRepository) GetURL(shortenedURL string) (string, bool) {
 	return longURL, true
 }
 
-func (rr *RamRepository) Close() error {
+func (rr *RAMRepository) Close() error {
 	return nil
 }
