@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 
+	"errors"
+
 	"github.com/AxMdv/go-url-shortener/internal/app/config"
 
 	"github.com/AxMdv/go-url-shortener/internal/app/storage"
@@ -41,8 +43,18 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 		LongURL:      string(longURL),
 	}
 	err = s.Repository.AddURL(formedURL)
+
 	if err != nil {
-		log.Panic("Cant save urls to storage", err)
+		var duplicateErr *storage.AddURLError
+		if errors.As(err, &duplicateErr) {
+			res := fmt.Sprintf("%s/%s", s.Config.ResponseResultAddr, duplicateErr.DuplicateValue)
+			fmt.Println(duplicateErr.DuplicateValue, res)
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte(res))
+			return
+		}
+		log.Panic("Cant save urls to storage ", err)
 		return
 	}
 
@@ -81,7 +93,17 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 		LongURL:      request.URL,
 	}
 	err := s.Repository.AddURL(formedURL)
+
 	if err != nil {
+		var duplicateErr *storage.AddURLError
+		if errors.As(err, &duplicateErr) {
+			res := fmt.Sprintf("%s/%s", s.Config.ResponseResultAddr, duplicateErr.DuplicateValue)
+			fmt.Println(duplicateErr.DuplicateValue, res)
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte(res))
+			return
+		}
 		log.Panic("Cant save urls to storage", err)
 		return
 	}

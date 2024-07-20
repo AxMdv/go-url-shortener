@@ -37,9 +37,17 @@ func (dr *DBRepository) AddURL(formedURL *FormedURL) error {
 	VALUES ($1, $2, $3)
 	ON CONFLICT ON CONSTRAINT urls_pk DO NOTHING;
 	`
-	_, err := dr.DB.ExecContext(context.Background(), query, formedURL.ShortenedURL, formedURL.LongURL, formedURL.UIID)
+	result, err := dr.DB.ExecContext(context.Background(), query, formedURL.ShortenedURL, formedURL.LongURL, formedURL.UIID)
 	if err != nil {
 		return err
+	}
+
+	num, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if num == 0 {
+		return NewDuplicateError(ErrDuplicate, formedURL.ShortenedURL)
 	}
 	return nil
 }

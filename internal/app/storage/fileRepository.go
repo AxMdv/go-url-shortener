@@ -15,6 +15,9 @@ type FileRepository struct {
 }
 
 func (fr *FileRepository) AddURL(formedURL *FormedURL) error {
+	if fr.MapURL[formedURL.ShortenedURL] != "" {
+		return NewDuplicateError(ErrDuplicate, formedURL.ShortenedURL)
+	}
 	fr.MapURL[formedURL.ShortenedURL] = formedURL.LongURL
 
 	err := fr.URLSaver.WriteURL(formedURL)

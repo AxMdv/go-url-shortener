@@ -1,6 +1,9 @@
 package storage
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/AxMdv/go-url-shortener/internal/app/config"
 )
 
@@ -26,3 +29,24 @@ type FormedURL struct {
 	ShortenedURL string `json:"short_url"`
 	LongURL      string `json:"original_url"`
 }
+
+// .............................................................
+
+type AddURLError struct {
+	DuplicateValue string
+	Err            error
+}
+
+func (ae *AddURLError) Error() string {
+	return fmt.Sprintf("%v %v", ae.DuplicateValue, ae.Err)
+}
+func NewDuplicateError(err error, shortenedURL string) error {
+	return &AddURLError{
+		DuplicateValue: shortenedURL,
+		Err:            err,
+	}
+}
+
+var ErrDuplicate = errors.New("url already exists")
+
+// .............................................................

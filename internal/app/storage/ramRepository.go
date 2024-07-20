@@ -9,6 +9,9 @@ func NewRAMRepository() (*RAMRepository, error) {
 }
 
 func (rr *RAMRepository) AddURL(formedURL *FormedURL) error {
+	if rr.MapURL[formedURL.ShortenedURL] != "" {
+		return NewDuplicateError(ErrDuplicate, formedURL.ShortenedURL)
+	}
 	rr.MapURL[formedURL.ShortenedURL] = formedURL.LongURL
 	return nil
 }
