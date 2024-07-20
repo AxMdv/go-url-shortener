@@ -14,7 +14,7 @@ type RequestBatch struct {
 }
 
 type BatchOriginal struct {
-	CorrelationId string `json:"correlation_id"`
+	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"original_url"`
 }
 
@@ -23,6 +23,6 @@ type ResponseBatch struct {
 }
 
 type BatchShortened struct {
-	CorrelationId string `json:"correlation_id"`
+	CorrelationID string `json:"correlation_id"`
 	ShortenedURL  string `json:"short_url"`
 }

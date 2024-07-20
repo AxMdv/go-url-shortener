@@ -136,7 +136,7 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 
 	for i, v := range requestBatch.BatchList {
 
-		urlData[i].UIID = v.CorrelationId
+		urlData[i].UIID = v.CorrelationID
 		urlData[i].LongURL = v.OriginalURL
 		shortenedURL := base64.RawStdEncoding.EncodeToString([]byte(v.OriginalURL))
 		urlData[i].ShortenedURL = shortenedURL
@@ -152,7 +152,7 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 
 	respData := make([]BatchShortened, countReqBatch)
 	for i, v := range urlData {
-		respData[i].CorrelationId = v.UIID
+		respData[i].CorrelationID = v.UIID
 		respData[i].ShortenedURL = fmt.Sprintf("%s/%s", s.Config.ResponseResultAddr, v.ShortenedURL)
 	}
 	resp, err := json.Marshal(respData)
