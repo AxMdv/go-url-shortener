@@ -97,12 +97,19 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		var duplicateErr *storage.AddURLError
 		if errors.As(err, &duplicateErr) {
+
 			res := fmt.Sprintf("%s/%s", s.Config.ResponseResultAddr, duplicateErr.DuplicateValue)
-			fmt.Println(duplicateErr.DuplicateValue, res)
+			response := Response{Result: res}
+			resp, err := json.Marshal(response)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 			w.Header().Set("Content-Type", "text/plain")
 			w.WriteHeader(http.StatusConflict)
-			w.Write([]byte(res))
+			w.Write([]byte(resp))
 			return
+
 		}
 		log.Panic("Cant save urls to storage", err)
 		return
