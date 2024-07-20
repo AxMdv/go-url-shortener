@@ -6,6 +6,7 @@ import (
 
 type Repository interface {
 	AddURL(*FormedURL) error
+	AddURLBatch([]FormedURL) error
 	GetURL(shortenedURL string) (string, bool)
 	Close() error
 }
@@ -18,4 +19,10 @@ func NewRepository(config *config.Options) (Repository, error) {
 		return NewFileRepository(config)
 	}
 	return NewRAMRepository()
+}
+
+type FormedURL struct {
+	UIID         string `json:"uiid"`
+	ShortenedURL string `json:"short_url"`
+	LongURL      string `json:"original_url"`
 }

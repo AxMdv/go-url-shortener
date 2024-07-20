@@ -21,6 +21,17 @@ func (fr *FileRepository) AddURL(formedURL *FormedURL) error {
 	return err
 }
 
+func (fr *FileRepository) AddURLBatch(formedURL []FormedURL) error {
+	for _, v := range formedURL {
+		fr.MapURL[v.ShortenedURL] = v.LongURL
+		err := fr.URLSaver.WriteURL(&v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (fr *FileRepository) GetURL(shortenedURL string) (string, bool) {
 	longURL := fr.MapURL[shortenedURL]
 	if longURL == "" {
@@ -134,10 +145,4 @@ func (u *URLFileReader) ReadURL() error {
 
 func (u *URLFileReader) Close() error {
 	return u.file.Close()
-}
-
-type FormedURL struct {
-	UIID         string `json:"uiid"`
-	ShortenedURL string `json:"short_url"`
-	LongURL      string `json:"original_url"`
 }

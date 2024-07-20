@@ -110,3 +110,58 @@ func (s *ShortenerHandlers) CheckDatabaseConnection(w http.ResponseWriter, r *ht
 	}
 	w.WriteHeader(http.StatusOK)
 }
+
+func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.Request) {
+
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Panic(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(bodyBytes) < 1 {
+		w.WriteHeader(http.StatusNotAcceptable)
+	}
+
+	var requestBatch RequestBatch
+	err = json.Unmarshal(bodyBytes, &requestBatch.BatchList)
+	if err != nil {
+		log.Panic(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	//requestBatch = {BatchList{batch original{"corr":"123", re}, ""}}
+	countReqBatch := len(requestBatch.BatchList)
+	urlData := make([]storage.FormedURL, countReqBatch)
+
+	for i, v := range requestBatch.BatchList {
+
+		urlData[i].UIID = v.CorrelationId
+		urlData[i].LongURL = v.OriginalURL
+		shortenedURL := base64.RawStdEncoding.EncodeToString([]byte(v.OriginalURL))
+		urlData[i].ShortenedURL = shortenedURL
+
+	}
+
+	err = s.Repository.AddURLBatch(urlData)
+	if err != nil {
+		log.Panic("can`t add url batch to storage", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	respData := make([]BatchShortened, countReqBatch)
+	for i, v := range urlData {
+		respData[i].CorrelationId = v.UIID
+		respData[i].ShortenedURL = fmt.Sprintf("%s/%s", s.Config.ResponseResultAddr, v.ShortenedURL)
+	}
+	resp, err := json.Marshal(respData)
+	if err != nil {
+		log.Panic("can`t marshal response batch", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+}

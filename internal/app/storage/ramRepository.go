@@ -13,6 +13,13 @@ func (rr *RAMRepository) AddURL(formedURL *FormedURL) error {
 	return nil
 }
 
+func (rr *RAMRepository) AddURLBatch(formedURL []FormedURL) error {
+	for _, v := range formedURL {
+		rr.MapURL[v.ShortenedURL] = v.LongURL
+	}
+	return nil
+}
+
 func (rr *RAMRepository) GetURL(shortenedURL string) (string, bool) {
 	longURL := rr.MapURL[shortenedURL]
 	if longURL == "" {

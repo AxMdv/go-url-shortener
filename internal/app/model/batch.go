@@ -1,14 +1,5 @@
-package handlers
+package model
 
-type Request struct {
-	URL string `json:"url"`
-}
-
-type Response struct {
-	Result string `json:"result"`
-}
-
-// ........................................................
 type RequestBatch struct {
 	BatchList []BatchOriginal
 }

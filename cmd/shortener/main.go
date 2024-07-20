@@ -29,6 +29,7 @@ func main() {
 	r.Get("/{shortenedURL}", middleware.WithLogging(s.GetLongURL))
 	r.Post("/api/shorten", middleware.WithLogging(middleware.GzipMiddleware(s.CreateShortURLJson)))
 	r.Get("/ping", middleware.WithLogging(s.CheckDatabaseConnection))
+	r.Post("/api/shorten/batch", middleware.WithLogging(s.CreateShortURLBatch))
 
 	log.Fatal(http.ListenAndServe(cfg.RunAddr, r))
 }
