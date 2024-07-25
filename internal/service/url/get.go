@@ -1,7 +1,7 @@
 package url
 
-func (s *service) GetLongURL(shortened_URL string) (string, error) {
-	longURL, err := s.urlRepository.GetURL(shortened_URL)
+func (s *service) GetLongURL(shortenedURL string) (string, error) {
+	longURL, err := s.urlRepository.GetURL(shortenedURL)
 	if err != nil {
 		return "", err
 	}
