@@ -74,7 +74,7 @@ func (s *ShortenerHandlers) GetLongURL(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Panic(err)
 	}
-	if longURL != "" {
+	if longURL == "" {
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		w.Header().Add("Location", longURL)
