@@ -11,7 +11,6 @@ type Repository interface {
 	AddURL(*FormedURL) error
 	AddURLBatch([]FormedURL) error
 	GetURL(shortenedURL string) (string, error)
-	Close() error
 }
 
 func NewRepository(config *config.Options) (Repository, error) {
@@ -59,3 +58,11 @@ func NewDuplicateError(err error, shortenedURL string) error {
 var ErrDuplicate = errors.New("url already exists")
 
 // .............................................................
+
+type Pinger interface {
+	PingDatabase(config.Options) error
+}
+
+type Closer interface {
+	Close() error
+}

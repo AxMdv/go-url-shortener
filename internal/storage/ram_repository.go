@@ -30,7 +30,3 @@ func (rr *RAMRepository) GetURL(shortenedURL string) (string, error) {
 	}
 	return longURL, nil
 }
-
-func (rr *RAMRepository) Close() error {
-	return nil
-}
