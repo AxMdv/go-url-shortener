@@ -23,4 +23,7 @@ vendor/
 .vscode
 
 #urs inside json
-#tmp/
+tmp
+
+#env file
+.env

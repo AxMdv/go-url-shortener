@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/AxMdv/go-url-shortener/internal/app/config"
+	"github.com/AxMdv/go-url-shortener/internal/config"
 )
 
 type Repository interface {
 	AddURL(*FormedURL) error
 	AddURLBatch([]FormedURL) error
-	GetURL(shortenedURL string) (string, bool)
+	GetURL(shortenedURL string) (string, error)
 	Close() error
 }
 
@@ -29,6 +29,15 @@ type FormedURL struct {
 	ShortenedURL string `json:"short_url"`
 	LongURL      string `json:"original_url"`
 }
+
+// func (fu []FormedURL) ToResponseBatch() handlers.ResponseBatch {
+// 	respData := make([]handlers.BatchShortened, len(fu))
+// 	for i, v := range fu {
+// 		respData[i].CorrelationID = v.UIID
+// 		respData[i].ShortenedURL = fmt.Sprintf("%s/%s", s.Config.ResponseResultAddr, v.ShortenedURL)
+// 	}
+// 	return respData
+// }
 
 // .............................................................
 

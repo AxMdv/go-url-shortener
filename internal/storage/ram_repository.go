@@ -23,12 +23,12 @@ func (rr *RAMRepository) AddURLBatch(formedURL []FormedURL) error {
 	return nil
 }
 
-func (rr *RAMRepository) GetURL(shortenedURL string) (string, bool) {
+func (rr *RAMRepository) GetURL(shortenedURL string) (string, error) {
 	longURL := rr.MapURL[shortenedURL]
 	if longURL == "" {
-		return "", false
+		return "", nil
 	}
-	return longURL, true
+	return longURL, nil
 }
 
 func (rr *RAMRepository) Close() error {

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/AxMdv/go-url-shortener/internal/app/config"
+	"github.com/AxMdv/go-url-shortener/internal/config"
 )
 
 type FileRepository struct {
@@ -35,12 +35,12 @@ func (fr *FileRepository) AddURLBatch(formedURL []FormedURL) error {
 	return nil
 }
 
-func (fr *FileRepository) GetURL(shortenedURL string) (string, bool) {
+func (fr *FileRepository) GetURL(shortenedURL string) (string, error) {
 	longURL := fr.MapURL[shortenedURL]
 	if longURL == "" {
-		return "", false
+		return "", nil
 	}
-	return longURL, true
+	return longURL, nil
 }
 
 func (fr *FileRepository) Close() error {

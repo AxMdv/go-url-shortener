@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/AxMdv/go-url-shortener/internal/app/config"
+	"github.com/AxMdv/go-url-shortener/internal/config"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 

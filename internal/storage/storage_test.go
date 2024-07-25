@@ -3,7 +3,7 @@ package storage_test
 import (
 	"testing"
 
-	"github.com/AxMdv/go-url-shortener/internal/app/mocks"
+	"github.com/AxMdv/go-url-shortener/internal/mocks"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )

@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/AxMdv/go-url-shortener/internal/app/config"
+	"github.com/AxMdv/go-url-shortener/internal/config"
 )
 
 type DBRepository struct {
@@ -69,7 +69,7 @@ func (dr *DBRepository) AddURLBatch(formedURL []FormedURL) error {
 	return err
 }
 
-func (dr *DBRepository) GetURL(shortenedURL string) (string, bool) {
+func (dr *DBRepository) GetURL(shortenedURL string) (string, error) {
 	query := `
 	SELECT long_url from urls WHERE shortened_url = $1;
 	`
@@ -77,9 +77,9 @@ func (dr *DBRepository) GetURL(shortenedURL string) (string, bool) {
 	var longURL string
 	err := rowLongURL.Scan(&longURL)
 	if err != nil {
-		return "", false
+		return "", err
 	}
-	return longURL, true
+	return longURL, nil
 }
 
 func (dr *DBRepository) Close() error {
