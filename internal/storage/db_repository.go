@@ -27,20 +27,22 @@ func NewDBRepository(config *config.Options) (*DBRepository, error) {
 	dbRepository := DBRepository{
 		DB: db,
 	}
-	err = dbRepository.createDB()
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err = dbRepository.createDB(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return &dbRepository, nil
 }
 
-func (dr *DBRepository) AddURL(formedURL *FormedURL) error {
+func (dr *DBRepository) AddURL(ctx context.Context, formedURL *FormedURL) error {
 	query := `
 	INSERT INTO urls 
 	VALUES ($1, $2, $3)
 	ON CONFLICT ON CONSTRAINT urls_pk DO NOTHING;
 	`
-	result, err := dr.DB.ExecContext(context.Background(), query, formedURL.ShortenedURL, formedURL.LongURL, formedURL.UIID)
+	result, err := dr.DB.ExecContext(ctx, query, formedURL.ShortenedURL, formedURL.LongURL, formedURL.UIID)
 	if err != nil {
 		return err
 	}
@@ -55,28 +57,32 @@ func (dr *DBRepository) AddURL(formedURL *FormedURL) error {
 	return nil
 }
 
-func (dr *DBRepository) AddURLBatch(formedURL []FormedURL) error {
+func (dr *DBRepository) AddURLBatch(ctx context.Context, formedURL []FormedURL) error {
 	tx, err := dr.DB.Begin()
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
+	stmt, err := tx.PrepareContext(ctx, "INSERT INTO urls (shortened_url, long_url, uuid)"+
+		" VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT urls_pk DO NOTHING")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
 	for _, v := range formedURL {
-		_, err := tx.ExecContext(context.Background(), "INSERT INTO urls (shortened_url, long_url, uuid)"+
-			" VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT urls_pk DO NOTHING", v.ShortenedURL, v.LongURL, v.UIID)
+		_, err := stmt.ExecContext(ctx, v.ShortenedURL, v.LongURL, v.UIID)
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 	}
-	tx.Commit()
-	return err
+	return tx.Commit()
 }
 
-func (dr *DBRepository) GetURL(shortenedURL string) (string, error) {
+func (dr *DBRepository) GetURL(ctx context.Context, shortenedURL string) (string, error) {
 	query := `
 	SELECT long_url from urls WHERE shortened_url = $1;
 	`
-	rowLongURL := dr.DB.QueryRowContext(context.Background(), query, shortenedURL)
+	rowLongURL := dr.DB.QueryRowContext(ctx, query, shortenedURL)
 	var longURL string
 	err := rowLongURL.Scan(&longURL)
 	if err != nil {
@@ -90,7 +96,7 @@ func (dr *DBRepository) Close() error {
 	return err
 }
 
-func (dr *DBRepository) createDB() error {
+func (dr *DBRepository) createDB(ctx context.Context) error {
 	query := `
 	CREATE TABLE IF NOT EXISTS urls (
 		shortened_url varchar NOT NULL,
@@ -98,11 +104,11 @@ func (dr *DBRepository) createDB() error {
 		uuid varchar NOT NULL,
 		CONSTRAINT urls_pk PRIMARY KEY (shortened_url)
 	);`
-	_, err := dr.DB.ExecContext(context.Background(), query)
+	_, err := dr.DB.ExecContext(ctx, query)
 	return err
 }
 
-func (dr *DBRepository) PingDatabase(config config.Options) error {
+func (dr *DBRepository) PingDB(ctx context.Context, config config.Options) error {
 	dsn := config.DataBaseDSN
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
@@ -110,9 +116,6 @@ func (dr *DBRepository) PingDatabase(config config.Options) error {
 		return err
 	}
 	defer db.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
 
 	if err := db.PingContext(ctx); err != nil {
 		log.Panic(err)

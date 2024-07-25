@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -8,9 +9,9 @@ import (
 )
 
 type Repository interface {
-	AddURL(*FormedURL) error
-	AddURLBatch([]FormedURL) error
-	GetURL(shortenedURL string) (string, error)
+	AddURL(context.Context, *FormedURL) error
+	AddURLBatch(context.Context, []FormedURL) error
+	GetURL(context.Context, string) (string, error)
 }
 
 func NewRepository(config *config.Options) (Repository, error) {
@@ -60,7 +61,7 @@ var ErrDuplicate = errors.New("url already exists")
 // .............................................................
 
 type Pinger interface {
-	PingDatabase(config.Options) error
+	PingDB(context.Context, config.Options) error
 }
 
 type Closer interface {
