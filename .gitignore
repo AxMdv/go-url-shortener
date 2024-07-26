@@ -22,8 +22,9 @@ vendor/
 .idea
 .vscode
 
-#urs inside json
-tmp/
 
-#env file
+# env file
 .env
+
+# urs inside json
+tmp/short-url-db.json
