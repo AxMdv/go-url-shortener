@@ -5,14 +5,15 @@ import (
 	"os"
 )
 
-var Options struct {
+type Options struct {
 	RunAddr            string
 	ResponseResultAddr string
 	FileStorage        string
 	DataBaseDSN        string
 }
 
-func ParseOptions() {
+func ParseOptions() *Options {
+	Options := Options{}
 	flag.StringVar(&Options.RunAddr, "a", ":8080", "address and port to run server")
 	flag.StringVar(&Options.ResponseResultAddr, "b", "http://localhost:8080", "resut basic response address (before shortened URL)")
 	flag.StringVar(&Options.FileStorage, "f", "/tmp/short-url-db.json", "path to save shortened URLs")
@@ -31,4 +32,5 @@ func ParseOptions() {
 	if envDataBaseDSN := os.Getenv("DATABASE_DSN"); envDataBaseDSN != "" {
 		Options.DataBaseDSN = envDataBaseDSN
 	}
+	return &Options
 }

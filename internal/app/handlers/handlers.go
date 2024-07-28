@@ -15,15 +15,16 @@ import (
 )
 
 type ShortenerHandlers struct {
-	Repository *storage.Repository
+	Repository storage.Repository
+	Config     config.Options
 }
 
-func NewShortenerHandlers(filename string) (*ShortenerHandlers, error) {
-	repository, err := storage.NewRepository(filename)
+func NewShortenerHandlers(config *config.Options) (*ShortenerHandlers, error) {
+	repository, err := storage.NewRepository(config)
 	if err != nil {
 		return nil, err
 	}
-	return &ShortenerHandlers{Repository: repository}, nil
+	return &ShortenerHandlers{Repository: repository, Config: *config}, nil
 }
 
 func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Request) {
@@ -34,20 +35,18 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	shortenedURL := base64.RawStdEncoding.EncodeToString(longURL)
-	s.Repository.AddURL(string(longURL), shortenedURL)
-	if s.Repository.URLSaver != nil {
-		err = s.Repository.URLSaver.WriteURL(&storage.FormedURL{
-			UIID:         r.RequestURI,
-			ShortenedURL: shortenedURL,
-			LongURL:      string(longURL),
-		})
-		if err != nil {
-			log.Panic("Cant save urls to storage", err)
-			return
-		}
+	formedURL := &storage.FormedURL{
+		UIID:         r.RequestURI,
+		ShortenedURL: shortenedURL,
+		LongURL:      string(longURL),
+	}
+	err = s.Repository.AddURL(formedURL)
+	if err != nil {
+		log.Panic("Cant save urls to storage", err)
+		return
 	}
 
-	res := fmt.Sprintf("%s/%s", config.Options.ResponseResultAddr, shortenedURL)
+	res := fmt.Sprintf("%s/%s", s.Config.ResponseResultAddr, shortenedURL)
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(res))
@@ -55,7 +54,7 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 
 func (s *ShortenerHandlers) GetLongURL(w http.ResponseWriter, r *http.Request) {
 	shortenedURL := chi.URLParam(r, "shortenedURL")
-	longURL, found := s.Repository.FindShortenedURL(shortenedURL)
+	longURL, found := s.Repository.GetURL(shortenedURL)
 	if !found {
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
@@ -76,20 +75,18 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 		return
 	}
 	shortenedURL := base64.RawStdEncoding.EncodeToString([]byte(request.URL))
-	s.Repository.AddURL(request.URL, shortenedURL)
-	if s.Repository.URLSaver != nil {
-		err := s.Repository.URLSaver.WriteURL(&storage.FormedURL{
-			UIID:         r.RequestURI,
-			ShortenedURL: shortenedURL,
-			LongURL:      request.URL,
-		})
-		if err != nil {
-			log.Panic("Cant save urls to storage", err)
-			return
-		}
+	formedURL := &storage.FormedURL{
+		UIID:         r.RequestURI,
+		ShortenedURL: shortenedURL,
+		LongURL:      request.URL,
+	}
+	err := s.Repository.AddURL(formedURL)
+	if err != nil {
+		log.Panic("Cant save urls to storage", err)
+		return
 	}
 
-	res := fmt.Sprintf("%s/%s", config.Options.ResponseResultAddr, shortenedURL)
+	res := fmt.Sprintf("%s/%s", s.Config.ResponseResultAddr, shortenedURL)
 	response := Response{Result: res}
 	resp, err := json.Marshal(response)
 	if err != nil {
@@ -102,11 +99,11 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 }
 
 func (s *ShortenerHandlers) CheckDatabaseConnection(w http.ResponseWriter, r *http.Request) {
-	if config.Options.DataBaseDSN == "" {
+	if s.Config.DataBaseDSN == "" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	err := storage.PingDatabase()
+	err := storage.PingDatabase(s.Config)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

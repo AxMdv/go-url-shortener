@@ -10,8 +10,8 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func PingDatabase() error {
-	dsn := config.Options.DataBaseDSN
+func PingDatabase(config config.Options) error {
+	dsn := config.DataBaseDSN
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		log.Panic(err)
