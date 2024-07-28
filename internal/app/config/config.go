@@ -34,3 +34,5 @@ func ParseOptions() *Options {
 	}
 	return &Options
 }
+
+//dsn := "user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable"

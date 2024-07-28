@@ -44,6 +44,23 @@ func (dr *DBRepository) AddURL(formedURL *FormedURL) error {
 	return nil
 }
 
+func (dr *DBRepository) AddURLBatch(formedURL []FormedURL) error {
+	tx, err := dr.DB.Begin()
+	if err != nil {
+		return err
+	}
+	for _, v := range formedURL {
+		_, err := tx.ExecContext(context.Background(), "INSERT INTO urls (shortened_url, long_url, uuid)"+
+			" VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT urls_pk DO NOTHING", v.ShortenedURL, v.LongURL, v.UIID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	tx.Commit()
+	return err
+}
+
 func (dr *DBRepository) GetURL(shortenedURL string) (string, bool) {
 	query := `
 	SELECT long_url from urls WHERE shortened_url = $1;
