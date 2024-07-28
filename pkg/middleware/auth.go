@@ -46,7 +46,7 @@ func SignUpMiddleware(h http.HandlerFunc) http.HandlerFunc {
 			return //
 		}
 		// c айди все ок - передаём в контексте реквеста айди
-		id := auth.GetIdFromCookie(cookie.Value)
+		id := auth.GetIDFromCookie(cookie.Value)
 		cr := auth.SetUUIDToRequestContext(r, id)
 		h.ServeHTTP(w, cr)
 	}
@@ -65,7 +65,7 @@ func ValidateUserMiddleware(h http.HandlerFunc) http.HandlerFunc {
 			log.Println("cookie is not valid or error during validation of cookie", err)
 		}
 		// c айди все ок - передаём в контексте реквеста айди
-		id := auth.GetIdFromCookie(cookie.Value)
+		id := auth.GetIDFromCookie(cookie.Value)
 		cr := auth.SetUUIDToRequestContext(r, id)
 		h.ServeHTTP(w, cr)
 	}

@@ -7,13 +7,11 @@ import (
 	"encoding/hex"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 )
 
-const TOKEN_EXP = time.Hour * 12
-const SECRET_KEY = "abwLpqp4uKfxiQJIbfYIudou7K7qbtXE"
+const secretKey = "abwLpqp4uKfxiQJIbfYIudou7K7qbtXE"
 
 // struct to pass user id through request context
 type requestContextUserIDValue struct{}
@@ -84,7 +82,7 @@ func createUUID() (uuid.UUID, error) {
 }
 
 func createSignature(src []byte) (sign []byte) {
-	h := hmac.New(sha256.New, []byte(SECRET_KEY))
+	h := hmac.New(sha256.New, []byte(secretKey))
 	h.Write(src)
 	sign = h.Sum(nil)
 
@@ -105,7 +103,7 @@ func SetUUIDToRequestContext(r *http.Request, id string) *http.Request {
 
 }
 
-func GetIdFromCookie(cookieValue string) (id string) {
+func GetIDFromCookie(cookieValue string) (id string) {
 	decodedCookieVal, _ := hex.DecodeString(cookieValue)
 	id = getIDFromCookieVal(decodedCookieVal)
 	return id
