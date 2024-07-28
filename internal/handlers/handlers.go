@@ -195,10 +195,10 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 	w.Write(resp)
 }
 
-func (s *ShortenerHandlers) GetAllURLById(w http.ResponseWriter, r *http.Request) {
+func (s *ShortenerHandlers) GetAllURLByID(w http.ResponseWriter, r *http.Request) {
 
 	uuid := auth.GetUUIDFromContext(r.Context())
-	formedURL, err := s.shortenerService.GetAllURLById(uuid)
+	formedURL, err := s.shortenerService.GetAllURLByID(uuid)
 	if err != nil {
 		var noContentError *storage.NoContentError
 		if errors.As(err, &noContentError) {

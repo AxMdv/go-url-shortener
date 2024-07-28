@@ -12,6 +12,6 @@ func NewShortenerRouter(s *ShortenerHandlers) *chi.Mux {
 	r.Post("/api/shorten", mw.WithLogging(mw.SignUpMiddleware(mw.GzipMiddleware(s.CreateShortURLJson))))
 	r.Get("/ping", mw.WithLogging(s.CheckDatabaseConnection))
 	r.Post("/api/shorten/batch", mw.WithLogging(mw.SignUpMiddleware(s.CreateShortURLBatch)))
-	r.Get("/api/user/urls", mw.WithLogging(mw.ValidateUserMiddleware(mw.GzipMiddleware((s.GetAllURLById)))))
+	r.Get("/api/user/urls", mw.WithLogging(mw.ValidateUserMiddleware(mw.GzipMiddleware((s.GetAllURLByID)))))
 	return r
 }
