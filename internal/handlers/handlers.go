@@ -11,6 +11,7 @@ import (
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
 	"github.com/AxMdv/go-url-shortener/internal/service"
+	"github.com/AxMdv/go-url-shortener/pkg/auth"
 
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 	"github.com/go-chi/chi/v5"
@@ -44,7 +45,7 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 	shortenedURL := s.shortenerService.ShortenLongURL(longURL)
 
 	formedURL := &storage.FormedURL{
-		UIID:         r.RequestURI,
+		UUID:         auth.GetUUIDFromContext(r.Context()),
 		ShortenedURL: shortenedURL,
 		LongURL:      string(longURL),
 	}
@@ -96,7 +97,7 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 
 	shortenedURL := s.shortenerService.ShortenLongURL([]byte(request.URL))
 	formedURL := &storage.FormedURL{
-		UIID:         r.RequestURI,
+		UUID:         auth.GetUUIDFromContext(r.Context()),
 		ShortenedURL: shortenedURL,
 		LongURL:      request.URL,
 	}
@@ -168,8 +169,8 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	formedURL := requestBatch.ToFormed()
+	uuid := auth.GetUUIDFromContext(r.Context())
+	formedURL := requestBatch.ToFormed(uuid)
 
 	err = s.shortenerService.CreateShortURLBatch(formedURL)
 	if err != nil {
@@ -180,7 +181,7 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 
 	respData := make([]BatchShortened, len(formedURL))
 	for i, v := range formedURL {
-		respData[i].CorrelationID = v.UIID
+		respData[i].CorrelationID = v.CorrelationID
 		respData[i].ShortenedURL = fmt.Sprintf("%s/%s", s.Config.ResponseResultAddr, v.ShortenedURL)
 	}
 	resp, err := json.Marshal(respData)
@@ -192,4 +193,31 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(resp)
+}
+
+func (s *ShortenerHandlers) GetAllURLById(w http.ResponseWriter, r *http.Request) {
+
+	uuid := auth.GetUUIDFromContext(r.Context())
+	formedURL, err := s.shortenerService.GetAllURLById(uuid)
+	if err != nil {
+		var noContentError *storage.NoContentError
+		if errors.As(err, &noContentError) {
+			w.WriteHeader(http.StatusNoContent)
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+
+	}
+	for i, v := range formedURL {
+		formedURL[i].ShortenedURL = fmt.Sprintf("%s/%s", s.Config.ResponseResultAddr, v.ShortenedURL)
+	}
+	resp, err := json.Marshal(formedURL)
+	if err != nil {
+		log.Panic("can`t marshal user urls", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(resp)
+
 }

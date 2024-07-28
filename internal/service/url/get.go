@@ -3,6 +3,8 @@ package url
 import (
 	"context"
 	"time"
+
+	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
 func (s *service) GetLongURL(shortenedURL string) (string, error) {
@@ -13,4 +15,16 @@ func (s *service) GetLongURL(shortenedURL string) (string, error) {
 		return "", err
 	}
 	return longURL, nil
+}
+
+func (s *service) GetAllURLById(uuid string) ([]storage.FormedURL, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	formedURL, err := s.urlRepository.GetURLByUserID(ctx, uuid)
+	if err != nil {
+		return nil, err
+	}
+	return formedURL, nil
+
 }
