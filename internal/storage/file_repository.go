@@ -2,10 +2,11 @@ package storage
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"os"
 
-	"github.com/AxMdv/go-url-shortener/internal/app/config"
+	"github.com/AxMdv/go-url-shortener/internal/config"
 )
 
 type FileRepository struct {
@@ -14,14 +15,17 @@ type FileRepository struct {
 	URLSaver *URLFileSaver
 }
 
-func (fr *FileRepository) AddURL(formedURL *FormedURL) error {
+func (fr *FileRepository) AddURL(_ context.Context, formedURL *FormedURL) error {
+	if fr.MapURL[formedURL.ShortenedURL] != "" {
+		return NewDuplicateError(ErrDuplicate, formedURL.ShortenedURL)
+	}
 	fr.MapURL[formedURL.ShortenedURL] = formedURL.LongURL
 
 	err := fr.URLSaver.WriteURL(formedURL)
 	return err
 }
 
-func (fr *FileRepository) AddURLBatch(formedURL []FormedURL) error {
+func (fr *FileRepository) AddURLBatch(_ context.Context, formedURL []FormedURL) error {
 	for _, v := range formedURL {
 		fr.MapURL[v.ShortenedURL] = v.LongURL
 		err := fr.URLSaver.WriteURL(&v)
@@ -32,12 +36,12 @@ func (fr *FileRepository) AddURLBatch(formedURL []FormedURL) error {
 	return nil
 }
 
-func (fr *FileRepository) GetURL(shortenedURL string) (string, bool) {
+func (fr *FileRepository) GetURL(_ context.Context, shortenedURL string) (string, error) {
 	longURL := fr.MapURL[shortenedURL]
 	if longURL == "" {
-		return "", false
+		return "", nil
 	}
-	return longURL, true
+	return longURL, nil
 }
 
 func (fr *FileRepository) Close() error {

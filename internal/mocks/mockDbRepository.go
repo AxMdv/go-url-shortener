@@ -12,7 +12,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	storage "github.com/AxMdv/go-url-shortener/internal/app/storage"
+	storage "github.com/AxMdv/go-url-shortener/internal/storage"
 	gomock "go.uber.org/mock/gomock"
 )
 
