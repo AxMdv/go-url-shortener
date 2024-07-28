@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log"
 	"time"
 
@@ -42,7 +43,7 @@ func (dr *DBRepository) AddURL(ctx context.Context, formedURL *FormedURL) error 
 	VALUES ($1, $2, $3)
 	ON CONFLICT ON CONSTRAINT urls_pk DO NOTHING;
 	`
-	result, err := dr.DB.ExecContext(ctx, query, formedURL.ShortenedURL, formedURL.LongURL, formedURL.UIID)
+	result, err := dr.DB.ExecContext(ctx, query, formedURL.ShortenedURL, formedURL.LongURL, formedURL.UUID)
 	if err != nil {
 		return err
 	}
@@ -70,7 +71,7 @@ func (dr *DBRepository) AddURLBatch(ctx context.Context, formedURL []FormedURL) 
 	}
 	defer stmt.Close()
 	for _, v := range formedURL {
-		_, err := stmt.ExecContext(ctx, v.ShortenedURL, v.LongURL, v.UIID)
+		_, err := stmt.ExecContext(ctx, v.ShortenedURL, v.LongURL, v.UUID)
 		if err != nil {
 			return err
 		}
@@ -122,4 +123,37 @@ func (dr *DBRepository) PingDB(ctx context.Context, config config.Options) error
 		return err
 	}
 	return nil
+}
+
+func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]FormedURL, error) {
+
+	stmt, err := dr.DB.PrepareContext(ctx, "SELECT shortened_url, long_url FROM urls WHERE uuid = $1")
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, uuid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	resultFormedURL := make([]FormedURL, 0)
+	for rows.Next() {
+		var fu FormedURL
+		err := rows.Scan(&fu.ShortenedURL, &fu.LongURL)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, NewNoContentError(ErrNoContent, uuid)
+			}
+			return nil, err
+		}
+		resultFormedURL = append(resultFormedURL, fu)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return resultFormedURL, nil
 }
