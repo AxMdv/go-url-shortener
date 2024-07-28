@@ -17,7 +17,7 @@ func (s *service) GetLongURL(shortenedURL string) (string, error) {
 	return longURL, nil
 }
 
-func (s *service) GetAllURLById(uuid string) ([]storage.FormedURL, error) {
+func (s *service) GetAllURLByID(uuid string) ([]storage.FormedURL, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
