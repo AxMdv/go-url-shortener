@@ -4,10 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/AxMdv/go-url-shortener/pkg/logger"
 	"go.uber.org/zap"
 )
-
-var Log *zap.Logger = zap.NewNop()
 
 type (
 	responseData struct {
@@ -32,23 +31,6 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.responseData.status = statusCode
 }
 
-func InitLogger() error {
-
-	lvl, err := zap.ParseAtomicLevel("info")
-	if err != nil {
-		return err
-	}
-	cfg := zap.NewProductionConfig()
-	cfg.Level = lvl
-	zl, err := cfg.Build()
-	if err != nil {
-		return err
-	}
-
-	Log = zl
-	return nil
-}
-
 func WithLogging(h http.HandlerFunc) http.HandlerFunc {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -64,12 +46,12 @@ func WithLogging(h http.HandlerFunc) http.HandlerFunc {
 		}
 		h(&lw, r)
 		duration := time.Since(start)
-		Log.Info("Incoming HTTP request:",
+		logger.Log.Info("Incoming HTTP request:",
 			zap.String("uri", r.RequestURI),
 			zap.String("method", r.Method),
 			zap.String("duration", duration.String()),
 		)
-		Log.Info("Response to HTTP request:",
+		logger.Log.Info("Response to HTTP request:",
 
 			zap.Int("status", responseData.status),
 			zap.Int("size", responseData.size),

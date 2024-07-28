@@ -31,6 +31,7 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 	defer r.Body.Close()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	shortenedURL := base64.RawStdEncoding.EncodeToString(longURL)
 	s.Repository.AddURL(string(longURL), shortenedURL)
@@ -42,6 +43,7 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 		})
 		if err != nil {
 			log.Panic("Cant save urls to storage", err)
+			return
 		}
 	}
 
@@ -83,6 +85,7 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 		})
 		if err != nil {
 			log.Panic("Cant save urls to storage", err)
+			return
 		}
 	}
 
@@ -91,8 +94,22 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 	resp, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(resp)
+}
+
+func (s *ShortenerHandlers) CheckDatabaseConnection(w http.ResponseWriter, r *http.Request) {
+	if config.Options.DataBaseDSN == "" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	err := storage.PingDatabase()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
