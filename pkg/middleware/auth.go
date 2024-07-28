@@ -7,12 +7,12 @@ import (
 	"github.com/AxMdv/go-url-shortener/pkg/auth"
 )
 
-const COOKIE_NAME = "user_id"
+const cookieName = "user_id"
 
 func SignUpMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		cookie, err := r.Cookie(COOKIE_NAME)
+		cookie, err := r.Cookie(cookieName)
 		//если куки нет
 		if err != nil {
 			id, cookieValue, err := auth.CreateIDToCookie()
@@ -21,7 +21,7 @@ func SignUpMiddleware(h http.HandlerFunc) http.HandlerFunc {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			http.SetCookie(w, &http.Cookie{Name: COOKIE_NAME, Value: cookieValue})
+			http.SetCookie(w, &http.Cookie{Name: cookieName, Value: cookieValue})
 			cr := auth.SetUUIDToRequestContext(r, id)
 			h.ServeHTTP(w, cr)
 			return
@@ -40,7 +40,7 @@ func SignUpMiddleware(h http.HandlerFunc) http.HandlerFunc {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			http.SetCookie(w, &http.Cookie{Name: COOKIE_NAME, Value: cookieValue})
+			http.SetCookie(w, &http.Cookie{Name: cookieName, Value: cookieValue})
 			cr := auth.SetUUIDToRequestContext(r, id)
 			h.ServeHTTP(w, cr)
 			return //
@@ -54,7 +54,7 @@ func SignUpMiddleware(h http.HandlerFunc) http.HandlerFunc {
 
 func ValidateUserMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie(COOKIE_NAME)
+		cookie, err := r.Cookie(cookieName)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
