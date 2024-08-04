@@ -2,31 +2,34 @@ package storage
 
 import (
 	"context"
-	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type DBRepository struct {
-	DB *sql.DB
+	db *pgxpool.Pool
 }
 
 func NewDBRepository(config *config.Options) (*DBRepository, error) {
-	db, err := sql.Open("pgx", config.DataBaseDSN)
+	pool, err := pgxpool.New(context.Background(), config.DataBaseDSN)
 	if err != nil {
 		return nil, err
 	}
 
-	err = db.Ping()
+	err = pool.Ping(context.Background())
 	if err != nil {
 		return nil, err
 	}
+
 	dbRepository := DBRepository{
-		DB: db,
+		db: pool,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -43,15 +46,12 @@ func (dr *DBRepository) AddURL(ctx context.Context, formedURL *FormedURL) error 
 	VALUES ($1, $2, $3)
 	ON CONFLICT ON CONSTRAINT urls_pk DO NOTHING;
 	`
-	result, err := dr.DB.ExecContext(ctx, query, formedURL.ShortenedURL, formedURL.LongURL, formedURL.UUID)
+	result, err := dr.db.Exec(ctx, query, formedURL.ShortenedURL, formedURL.LongURL, formedURL.UUID)
 	if err != nil {
 		return err
 	}
 
-	num, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
+	num := result.RowsAffected()
 	if num == 0 {
 		return NewDuplicateError(ErrDuplicate, formedURL.ShortenedURL)
 	}
@@ -59,81 +59,98 @@ func (dr *DBRepository) AddURL(ctx context.Context, formedURL *FormedURL) error 
 }
 
 func (dr *DBRepository) AddURLBatch(ctx context.Context, formedURL []FormedURL) error {
-	tx, err := dr.DB.Begin()
+	tx, err := dr.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
-	stmt, err := tx.PrepareContext(ctx, "INSERT INTO urls (shortened_url, long_url, uuid)"+
-		" VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT urls_pk DO NOTHING")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
+	defer tx.Rollback(ctx)
+
+	batch := &pgx.Batch{}
+	query := "INSERT INTO urls (shortened_url, long_url, uuid)" +
+		" VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT urls_pk DO NOTHING"
+
+	// stmt, err := tx.Prepare(ctx, "", "INSERT INTO urls (shortened_url, long_url, uuid)"+
+	// 	" VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT urls_pk DO NOTHING")
+	// if err != nil {
+	// 	return err
+	// }
+
 	for _, v := range formedURL {
-		_, err := stmt.ExecContext(ctx, v.ShortenedURL, v.LongURL, v.UUID)
-		if err != nil {
-			return err
-		}
+		batch.Queue(query, v.ShortenedURL, v.LongURL, v.UUID)
+		// _, err := stmt.ExecContext(ctx, v.ShortenedURL, v.LongURL, v.UUID)
+		// if err != nil {
+		// 	return err
+		// }
 	}
-	return tx.Commit()
+	dr.db.SendBatch(ctx, batch)
+	return tx.Commit(ctx)
 }
 
 func (dr *DBRepository) GetURL(ctx context.Context, shortenedURL string) (string, error) {
 	query := `
 	SELECT long_url from urls WHERE shortened_url = $1;
 	`
-	rowLongURL := dr.DB.QueryRowContext(ctx, query, shortenedURL)
+	rowLongURL := dr.db.QueryRow(ctx, query, shortenedURL)
 	var longURL string
 	err := rowLongURL.Scan(&longURL)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+
+			return "", nil
+		}
 		return "", err
 	}
 	return longURL, nil
 }
 
 func (dr *DBRepository) Close() error {
-	err := dr.DB.Close()
-	return err
+	dr.db.Close()
+	return nil
 }
 
 func (dr *DBRepository) createDB(ctx context.Context) error {
-	query := `
-	CREATE TABLE IF NOT EXISTS urls (
-		shortened_url varchar NOT NULL,
-		long_url varchar NOT NULL,
-		uuid varchar NOT NULL,
-		CONSTRAINT urls_pk PRIMARY KEY (shortened_url)
-	);`
-	_, err := dr.DB.ExecContext(ctx, query)
+	var tableName string
+	query1 := `
+	SELECT table_name
+	FROM information_schema.tables
+	WHERE table_schema = 'public'
+	AND table_name = 'urls'
+	LIMIT 1;`
+	row := dr.db.QueryRow(ctx, query1)
+	err := row.Scan(&tableName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			query2 := `
+				CREATE TABLE urls (
+				shortened_url varchar NOT NULL,
+				long_url varchar NOT NULL,
+				uuid varchar NOT NULL,
+				CONSTRAINT urls_pk PRIMARY KEY (shortened_url)
+				);
+				ALTER TABLE urls
+	  			ADD COLUMN "deleted_flag" BOOLEAN NOT NULL DEFAULT FALSE;`
+			_, err := dr.db.Exec(ctx, query2)
+			return err
+		}
+	}
 	return err
 }
 
-func (dr *DBRepository) PingDB(ctx context.Context, config config.Options) error {
-	dsn := config.DataBaseDSN
-	db, err := sql.Open("pgx", dsn)
-	if err != nil {
-		log.Panic(err)
-		return err
-	}
-	defer db.Close()
-
-	if err := db.PingContext(ctx); err != nil {
-		log.Panic(err)
-		return err
-	}
-	return nil
+func (dr *DBRepository) PingDB(ctx context.Context) error {
+	err := dr.db.Ping(ctx)
+	return err
 }
 
 func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]FormedURL, error) {
 
-	stmt, err := dr.DB.PrepareContext(ctx, "SELECT shortened_url, long_url FROM urls WHERE uuid = $1")
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
+	query := "SELECT shortened_url, long_url FROM urls WHERE uuid = $1"
+	// stmt, err := dr.db.Prepare(ctx, "SELECT shortened_url, long_url FROM urls WHERE uuid = $1")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// defer stmt.Close()
 
-	rows, err := stmt.QueryContext(ctx, uuid)
+	rows, err := dr.db.Query(ctx, query, uuid)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +161,7 @@ func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]Form
 		var fu FormedURL
 		err := rows.Scan(&fu.ShortenedURL, &fu.LongURL)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
+			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, NewNoContentError(ErrNoContent, uuid)
 			}
 			return nil, err
@@ -156,4 +173,48 @@ func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]Form
 		return nil, err
 	}
 	return resultFormedURL, nil
+}
+
+func (dr *DBRepository) DeleteURLBatch(ctx context.Context, formedURL []FormedURL) error {
+	// Получение пула подключений из sql.DB
+
+	query := `UPDATE urls SET deleted_flag = $1 WHERE uuid = $2 AND shortened_url = $3;`
+	deletedFlag := true
+	batch := &pgx.Batch{}
+	for _, v := range formedURL {
+		batch.Queue(query, deletedFlag, v.UUID, v.ShortenedURL)
+	}
+
+	br := dr.db.SendBatch(ctx, batch)
+	defer br.Close()
+
+	for _, v := range formedURL {
+		_, err := br.Exec()
+		if err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) {
+				log.Printf("some shit during delete batch %v, %v\n", v.ShortenedURL, v.UUID)
+			}
+		}
+	}
+	return br.Close()
+
+}
+
+func (dr *DBRepository) GetFlagByShortURL(ctx context.Context, shortenedURL string) (bool, error) {
+	query := `
+	SELECT deleted_flag from urls WHERE shortened_url = $1;
+	`
+	row := dr.db.QueryRow(ctx, query, shortenedURL)
+
+	var deleted bool
+	err := row.Scan(&deleted)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			fmt.Println("zahod kuda nado")
+			return false, nil
+		}
+		return false, err
+	}
+	return deleted, nil
 }

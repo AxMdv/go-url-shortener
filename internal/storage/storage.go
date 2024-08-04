@@ -13,6 +13,8 @@ type Repository interface {
 	AddURLBatch(context.Context, []FormedURL) error
 	GetURL(context.Context, string) (string, error)
 	GetURLByUserID(context.Context, string) ([]FormedURL, error)
+	DeleteURLBatch(ctx context.Context, formedURL []FormedURL) error
+	GetFlagByShortURL(context.Context, string) (bool, error)
 }
 
 func NewRepository(config *config.Options) (Repository, error) {
@@ -30,16 +32,8 @@ type FormedURL struct {
 	CorrelationID string `json:"correlation_id,omitempty"`
 	ShortenedURL  string `json:"short_url,omitempty"`
 	LongURL       string `json:"original_url,omitempty"`
+	DeletedFlag   bool   `json:"deleted_flag,omitempty"`
 }
-
-// func (fu []FormedURL) ToResponseBatch() handlers.ResponseBatch {
-// 	respData := make([]handlers.BatchShortened, len(fu))
-// 	for i, v := range fu {
-// 		respData[i].CorrelationID = v.UIID
-// 		respData[i].ShortenedURL = fmt.Sprintf("%s/%s", s.Config.ResponseResultAddr, v.ShortenedURL)
-// 	}
-// 	return respData
-// }
 
 // .............................................................
 
@@ -82,9 +76,16 @@ var ErrNoContent = errors.New("no urls created by current user ")
 
 // .............................................................
 type Pinger interface {
-	PingDB(context.Context, config.Options) error
+	PingDB(context.Context) error
 }
 
 type Closer interface {
 	Close() error
+}
+
+// .............................................................
+
+type DeleteBatch struct {
+	ShortenedURL []string
+	UUID         string
 }

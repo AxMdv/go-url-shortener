@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/AxMdv/go-url-shortener/internal/config"
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
@@ -10,6 +9,8 @@ type ShortenerService interface {
 	GetLongURL(string) (string, error)
 	ShortenLongURL([]byte) string
 	CreateShortURLBatch([]storage.FormedURL) error
-	PingDatabase(*config.Options) error
+	PingDatabase() error
 	GetAllURLByID(string) ([]storage.FormedURL, error)
+	DeleteURLBatch(storage.DeleteBatch)
+	GetFlagByShortURL(shortURL string) (isDeleted bool, err error)
 }

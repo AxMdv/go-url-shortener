@@ -42,11 +42,9 @@ type ResponseBatch struct {
 	BatchList []BatchShortened
 }
 
-// func (rb *ResponseBatch) CreateResponseBatch(formedURL []storage.FormedURL, ResponseResultAddr string) {
-
-// }
-
 type BatchShortened struct {
 	CorrelationID string `json:"correlation_id"`
 	ShortenedURL  string `json:"short_url"`
 }
+
+// ........................................................
