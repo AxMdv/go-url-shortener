@@ -10,9 +10,11 @@ import (
 )
 
 type FileRepository struct {
-	MapURL   map[string]string
-	filename string
-	URLSaver *URLFileSaver
+	MapURL     map[string]string   //[shortened]long
+	MapUUID    map[string][]string //[uuid][]shortened
+	MapDeleted map[string]bool     //[shortened]deleted_flag
+	filename   string
+	URLSaver   *URLFileSaver
 }
 
 func (fr *FileRepository) AddURL(_ context.Context, formedURL *FormedURL) error {
@@ -20,6 +22,8 @@ func (fr *FileRepository) AddURL(_ context.Context, formedURL *FormedURL) error 
 		return NewDuplicateError(ErrDuplicate, formedURL.ShortenedURL)
 	}
 	fr.MapURL[formedURL.ShortenedURL] = formedURL.LongURL
+
+	fr.MapUUID[formedURL.UUID] = append(fr.MapUUID[formedURL.UUID], formedURL.ShortenedURL)
 
 	err := fr.URLSaver.WriteURL(formedURL)
 	return err
@@ -51,9 +55,11 @@ func (fr *FileRepository) Close() error {
 
 func NewFileRepository(config *config.Options) (*FileRepository, error) {
 	repository := &FileRepository{
-		MapURL:   make(map[string]string),
-		filename: config.FileStorage,
-		URLSaver: nil,
+		MapURL:     make(map[string]string),
+		MapUUID:    make(map[string][]string),
+		MapDeleted: make(map[string]bool),
+		filename:   config.FileStorage,
+		URLSaver:   nil,
 	}
 	urlReader, err := NewURLReader(config.FileStorage)
 	if err != nil {
@@ -65,6 +71,7 @@ func NewFileRepository(config *config.Options) (*FileRepository, error) {
 	}
 	for _, v := range urlReader.FormedURL {
 		repository.MapURL[v.ShortenedURL] = v.LongURL
+		repository.MapUUID[v.UUID] = append(repository.MapUUID[v.UUID], v.ShortenedURL)
 	}
 	urlReader.Close()
 	urlSaver, err := NewURLFileSaver(config.FileStorage)
@@ -149,4 +156,42 @@ func (u *URLFileReader) ReadURL() error {
 
 func (u *URLFileReader) Close() error {
 	return u.file.Close()
+}
+
+func (fr *FileRepository) GetURLByUserID(_ context.Context, uuid string) ([]FormedURL, error) {
+	shortenedURL := fr.MapUUID[uuid]
+	formedURL := make([]FormedURL, 0)
+	for _, v := range shortenedURL {
+		longURL, err := fr.GetURL(context.Background(), v)
+		if err != nil {
+			return nil, err
+		}
+		var fu FormedURL
+		fu.LongURL = longURL
+		fu.ShortenedURL = v
+		formedURL = append(formedURL, fu)
+
+	}
+	return formedURL, nil
+}
+
+func (fr *FileRepository) DeleteURLBatch(ctx context.Context, formedURL []FormedURL) error {
+	for _, v := range formedURL {
+
+		sliceShortened := fr.MapUUID[v.UUID]
+		if sliceShortened == nil {
+			continue
+		}
+
+		contains := contains(sliceShortened, v.ShortenedURL)
+		if !contains {
+			continue
+		}
+		fr.MapDeleted[v.ShortenedURL] = true
+	}
+	return nil
+}
+
+func (fr *FileRepository) GetFlagByShortURL(_ context.Context, shortenedURL string) (bool, error) {
+	return fr.MapDeleted[shortenedURL], nil
 }
