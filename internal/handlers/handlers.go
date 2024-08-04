@@ -22,17 +22,8 @@ type ShortenerHandlers struct {
 	Config           config.Options
 }
 
-// func NewShortenerHandlers(config *config.Options) (*ShortenerHandlers, error) {
-// 	service, err := service.NewShortenerService()
-// 	repository, err := storage.NewRepository(config)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &ShortenerHandlers{Repository: repository, Config: *config}, nil
-// }
-
-func NewShortenerHandlers(shortenerService service.ShortenerService) *ShortenerHandlers {
-	return &ShortenerHandlers{shortenerService: shortenerService}
+func NewShortenerHandlers(shortenerService service.ShortenerService, config *config.Options) *ShortenerHandlers {
+	return &ShortenerHandlers{shortenerService: shortenerService, Config: *config}
 }
 
 func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Request) {
