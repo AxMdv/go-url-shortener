@@ -3,8 +3,9 @@ package storage
 import "context"
 
 type RAMRepository struct {
-	MapURL  map[string]string
-	MapUUID map[string][]string
+	MapURL     map[string]string   //[shortened]long
+	MapUUID    map[string][]string //[uuid][]shortened
+	MapDeleted map[string]bool     //[shortened]deleted_flag
 }
 
 func NewRAMRepository() (*RAMRepository, error) {
@@ -50,4 +51,35 @@ func (rr *RAMRepository) GetURLByUserID(_ context.Context, uuid string) ([]Forme
 
 	}
 	return formedURL, nil
+}
+
+func (rr *RAMRepository) DeleteURLBatch(ctx context.Context, formedURL []FormedURL) error {
+
+	for _, v := range formedURL {
+
+		sliceShortened := rr.MapUUID[v.UUID]
+		if sliceShortened == nil {
+			continue
+		}
+
+		contains := contains(sliceShortened, v.ShortenedURL)
+		if !contains {
+			continue
+		}
+		rr.MapDeleted[v.ShortenedURL] = true
+	}
+	return nil
+}
+
+func contains(target []string, value string) bool {
+	for _, v := range target {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+func (rr *RAMRepository) GetFlagByShortURL(_ context.Context, shortenedURL string) (bool, error) {
+	return rr.MapDeleted[shortenedURL], nil
 }

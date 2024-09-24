@@ -22,17 +22,8 @@ type ShortenerHandlers struct {
 	Config           config.Options
 }
 
-// func NewShortenerHandlers(config *config.Options) (*ShortenerHandlers, error) {
-// 	service, err := service.NewShortenerService()
-// 	repository, err := storage.NewRepository(config)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &ShortenerHandlers{Repository: repository, Config: *config}, nil
-// }
-
-func NewShortenerHandlers(shortenerService service.ShortenerService) *ShortenerHandlers {
-	return &ShortenerHandlers{shortenerService: shortenerService}
+func NewShortenerHandlers(shortenerService service.ShortenerService, config *config.Options) *ShortenerHandlers {
+	return &ShortenerHandlers{shortenerService: shortenerService, Config: *config}
 }
 
 func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Request) {
@@ -71,15 +62,29 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 
 func (s *ShortenerHandlers) GetLongURL(w http.ResponseWriter, r *http.Request) {
 	shortenedURL := chi.URLParam(r, "shortenedURL")
+	deleted, err := s.shortenerService.GetFlagByShortURL(shortenedURL)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if deleted {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
 	longURL, err := s.shortenerService.GetLongURL(shortenedURL)
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	if longURL == "" {
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	} else {
 		w.Header().Add("Location", longURL)
 		w.WriteHeader(http.StatusTemporaryRedirect)
+		return
 	}
 }
 
@@ -141,7 +146,7 @@ func (s *ShortenerHandlers) CheckDatabaseConnection(w http.ResponseWriter, r *ht
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	err := s.shortenerService.PingDatabase(&s.Config)
+	err := s.shortenerService.PingDatabase()
 	// err := storage.PingDatabase(s.Config)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -220,4 +225,34 @@ func (s *ShortenerHandlers) GetAllURLByID(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
 
+}
+
+func (s *ShortenerHandlers) DeleteURLBatch(w http.ResponseWriter, r *http.Request) {
+
+	contentType := r.Header.Get("Content-Type")
+	if contentType != "application/json" {
+		http.Error(w, "Invalid Content-Type", http.StatusBadRequest)
+		return
+	}
+
+	uuid := auth.GetUUIDFromContext(r.Context())
+
+	var deleteBatch storage.DeleteBatch
+
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	err = json.Unmarshal(bodyBytes, &deleteBatch.ShortenedURL)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	deleteBatch.UUID = uuid
+
+	s.shortenerService.DeleteURLBatch(deleteBatch)
+	w.WriteHeader(http.StatusAccepted)
 }

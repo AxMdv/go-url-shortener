@@ -1,4 +1,4 @@
-package url
+package service
 
 import "github.com/AxMdv/go-url-shortener/internal/storage"
 
