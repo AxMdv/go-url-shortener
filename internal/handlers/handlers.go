@@ -10,7 +10,7 @@ import (
 	"errors"
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
-	"github.com/AxMdv/go-url-shortener/internal/service"
+	"github.com/AxMdv/go-url-shortener/internal/shortener"
 	"github.com/AxMdv/go-url-shortener/pkg/auth"
 
 	"github.com/AxMdv/go-url-shortener/internal/storage"
@@ -18,11 +18,11 @@ import (
 )
 
 type ShortenerHandlers struct {
-	shortenerService service.ShortenerService
+	shortenerService shortener.ShortenerService
 	Config           config.Options
 }
 
-func NewShortenerHandlers(shortenerService service.ShortenerService, config *config.Options) *ShortenerHandlers {
+func NewShortenerHandlers(shortenerService shortener.ShortenerService, config *config.Options) *ShortenerHandlers {
 	return &ShortenerHandlers{shortenerService: shortenerService, Config: *config}
 }
 

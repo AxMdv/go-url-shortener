@@ -4,16 +4,17 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/AxMdv/go-url-shortener/internal/config"
 	"github.com/AxMdv/go-url-shortener/internal/handlers"
-	"github.com/AxMdv/go-url-shortener/internal/service"
+	"github.com/AxMdv/go-url-shortener/internal/shortener"
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 	"github.com/AxMdv/go-url-shortener/pkg/logger"
-	"github.com/go-chi/chi/v5"
 )
 
 type App struct {
-	urlService service.ShortenerService
+	urlService shortener.ShortenerService
 
 	urlRepository storage.Repository
 
@@ -38,7 +39,7 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
-	urlService := service.NewShortenerService(repository)
+	urlService := shortener.NewShortenerService(repository)
 
 	shortenerHandlers := handlers.NewShortenerHandlers(urlService, config)
 

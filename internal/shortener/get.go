@@ -7,7 +7,7 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
-func (s *service) GetLongURL(shortenedURL string) (string, error) {
+func (s *shortenerService) GetLongURL(shortenedURL string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	longURL, err := s.urlRepository.GetURL(ctx, shortenedURL)
@@ -17,7 +17,7 @@ func (s *service) GetLongURL(shortenedURL string) (string, error) {
 	return longURL, nil
 }
 
-func (s *service) GetAllURLByID(uuid string) ([]storage.FormedURL, error) {
+func (s *shortenerService) GetAllURLByID(uuid string) ([]storage.FormedURL, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -29,7 +29,7 @@ func (s *service) GetAllURLByID(uuid string) ([]storage.FormedURL, error) {
 
 }
 
-func (s *service) GetFlagByShortURL(shortURL string) (bool, error) {
+func (s *shortenerService) GetFlagByShortURL(shortURL string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	isDeleted, err := s.urlRepository.GetFlagByShortURL(ctx, shortURL)
