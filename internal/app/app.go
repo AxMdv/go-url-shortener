@@ -8,13 +8,13 @@ import (
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
 	"github.com/AxMdv/go-url-shortener/internal/handlers"
-	"github.com/AxMdv/go-url-shortener/internal/shortener"
+	"github.com/AxMdv/go-url-shortener/internal/service"
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 	"github.com/AxMdv/go-url-shortener/pkg/logger"
 )
 
 type App struct {
-	urlService shortener.ShortenerService
+	urlService service.ShortenerService
 
 	urlRepository storage.Repository
 
@@ -39,7 +39,7 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
-	urlService := shortener.NewShortenerService(repository)
+	urlService := service.NewShortenerService(repository)
 
 	shortenerHandlers := handlers.NewShortenerHandlers(urlService, config)
 

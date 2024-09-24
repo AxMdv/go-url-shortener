@@ -9,7 +9,7 @@ import (
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
 	"github.com/AxMdv/go-url-shortener/internal/handlers"
-	"github.com/AxMdv/go-url-shortener/internal/shortener"
+	"github.com/AxMdv/go-url-shortener/internal/service"
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,7 +24,7 @@ func Test_CreateShortURL(t *testing.T) {
 	}
 	repository, err := storage.NewRepository(config)
 	require.NoError(t, err)
-	urlService := shortener.NewShortenerService(repository)
+	urlService := service.NewShortenerService(repository)
 	shortenerHandlers := handlers.NewShortenerHandlers(urlService, config)
 
 	type want struct {
@@ -80,7 +80,7 @@ func TestShortenerHandlers_CreateShortURLJson(t *testing.T) {
 	}
 	repository, err := storage.NewRepository(config)
 	require.NoError(t, err)
-	urlService := shortener.NewShortenerService(repository)
+	urlService := service.NewShortenerService(repository)
 	shortenerHandlers := handlers.NewShortenerHandlers(urlService, config)
 
 	type want struct {
