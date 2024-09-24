@@ -108,34 +108,6 @@ func (dr *DBRepository) Close() error {
 	return nil
 }
 
-func (dr *DBRepository) createDB(ctx context.Context) error {
-	var tableName string
-	query1 := `
-	SELECT table_name
-	FROM information_schema.tables
-	WHERE table_schema = 'public'
-	AND table_name = 'urls'
-	LIMIT 1;`
-	row := dr.db.QueryRow(ctx, query1)
-	err := row.Scan(&tableName)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			query2 := `
-				CREATE TABLE urls (
-				shortened_url varchar NOT NULL,
-				long_url varchar NOT NULL,
-				uuid varchar NOT NULL,
-				CONSTRAINT urls_pk PRIMARY KEY (shortened_url)
-				);
-				ALTER TABLE urls
-	  			ADD COLUMN "deleted_flag" BOOLEAN NOT NULL DEFAULT FALSE;`
-			_, err := dr.db.Exec(ctx, query2)
-			return err
-		}
-	}
-	return err
-}
-
 func (dr *DBRepository) PingDB(ctx context.Context) error {
 	err := dr.db.Ping(ctx)
 	return err
@@ -217,4 +189,18 @@ func (dr *DBRepository) GetFlagByShortURL(ctx context.Context, shortenedURL stri
 		return false, err
 	}
 	return deleted, nil
+}
+
+func (dr *DBRepository) createDB(ctx context.Context) error {
+	query := `
+		CREATE TABLE IF NOT EXISTS urls (
+		shortened_url varchar NOT NULL,
+		long_url varchar NOT NULL,
+		uuid varchar NOT NULL,
+		CONSTRAINT urls_pk PRIMARY KEY (shortened_url)
+		);
+		ALTER TABLE urls
+		ADD COLUMN "deleted_flag" BOOLEAN NOT NULL DEFAULT FALSE;`
+	_, err := dr.db.Exec(ctx, query)
+	return err
 }
