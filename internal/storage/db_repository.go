@@ -3,13 +3,10 @@ package storage
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log"
 	"time"
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -69,18 +66,8 @@ func (dr *DBRepository) AddURLBatch(ctx context.Context, formedURL []FormedURL) 
 	query := "INSERT INTO urls (shortened_url, long_url, uuid)" +
 		" VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT urls_pk DO NOTHING"
 
-	// stmt, err := tx.Prepare(ctx, "", "INSERT INTO urls (shortened_url, long_url, uuid)"+
-	// 	" VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT urls_pk DO NOTHING")
-	// if err != nil {
-	// 	return err
-	// }
-
 	for _, v := range formedURL {
 		batch.Queue(query, v.ShortenedURL, v.LongURL, v.UUID)
-		// _, err := stmt.ExecContext(ctx, v.ShortenedURL, v.LongURL, v.UUID)
-		// if err != nil {
-		// 	return err
-		// }
 	}
 	dr.db.SendBatch(ctx, batch)
 	return tx.Commit(ctx)
@@ -116,11 +103,6 @@ func (dr *DBRepository) PingDB(ctx context.Context) error {
 func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]FormedURL, error) {
 
 	query := "SELECT shortened_url, long_url FROM urls WHERE uuid = $1"
-	// stmt, err := dr.db.Prepare(ctx, "SELECT shortened_url, long_url FROM urls WHERE uuid = $1")
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// defer stmt.Close()
 
 	rows, err := dr.db.Query(ctx, query, uuid)
 	if err != nil {
@@ -148,7 +130,6 @@ func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]Form
 }
 
 func (dr *DBRepository) DeleteURLBatch(ctx context.Context, formedURL []FormedURL) error {
-	// Получение пула подключений из sql.DB
 
 	query := `UPDATE urls SET deleted_flag = $1 WHERE uuid = $2 AND shortened_url = $3;`
 	deletedFlag := true
@@ -160,13 +141,10 @@ func (dr *DBRepository) DeleteURLBatch(ctx context.Context, formedURL []FormedUR
 	br := dr.db.SendBatch(ctx, batch)
 	defer br.Close()
 
-	for _, v := range formedURL {
+	for range formedURL {
 		_, err := br.Exec()
 		if err != nil {
-			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) {
-				log.Printf("some shit during delete batch %v, %v\n", v.ShortenedURL, v.UUID)
-			}
+			return err
 		}
 	}
 	return br.Close()
@@ -183,7 +161,6 @@ func (dr *DBRepository) GetFlagByShortURL(ctx context.Context, shortenedURL stri
 	err := row.Scan(&deleted)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			fmt.Println("zahod kuda nado")
 			return false, nil
 		}
 		return false, err
