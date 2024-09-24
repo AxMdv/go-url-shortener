@@ -11,4 +11,5 @@ type ShortenerService interface {
 	ShortenLongURL([]byte) string
 	CreateShortURLBatch([]storage.FormedURL) error
 	PingDatabase(*config.Options) error
+	GetAllURLByID(string) ([]storage.FormedURL, error)
 }

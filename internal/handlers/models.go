@@ -19,12 +19,13 @@ type RequestBatch struct {
 	BatchList []BatchOriginal
 }
 
-func (rb *RequestBatch) ToFormed() []storage.FormedURL {
+func (rb *RequestBatch) ToFormed(uuid string) []storage.FormedURL {
 	countReqBatch := len(rb.BatchList)
 	urlData := make([]storage.FormedURL, countReqBatch)
 
 	for i, v := range rb.BatchList {
-		urlData[i].UIID = v.CorrelationID
+		urlData[i].UUID = uuid
+		urlData[i].CorrelationID = v.CorrelationID
 		urlData[i].LongURL = v.OriginalURL
 		shortenedURL := base64.RawStdEncoding.EncodeToString([]byte(v.OriginalURL))
 		urlData[i].ShortenedURL = shortenedURL
