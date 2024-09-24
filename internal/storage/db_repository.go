@@ -174,10 +174,9 @@ func (dr *DBRepository) createDB(ctx context.Context) error {
 		shortened_url varchar NOT NULL,
 		long_url varchar NOT NULL,
 		uuid varchar NOT NULL,
+		deleted_flag BOOLEAN NOT NULL DEFAULT FALSE,
 		CONSTRAINT urls_pk PRIMARY KEY (shortened_url)
-		);
-		ALTER TABLE urls
-		ADD COLUMN "deleted_flag" BOOLEAN NOT NULL DEFAULT FALSE;`
+		);`
 	_, err := dr.db.Exec(ctx, query)
 	return err
 }
