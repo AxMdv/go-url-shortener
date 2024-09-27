@@ -16,6 +16,42 @@ const secretKey = "abwLpqp4uKfxiQJIbfYIudou7K7qbtXE"
 // struct to pass user id through request context
 type requestContextUserIDValue struct{}
 
+func CreateIDToCookie() (id string, cookieValue string, err error) {
+
+	//create uuid
+	newID, err := createUUID()
+	if err != nil {
+		log.Print(err)
+		return "", "", err
+	}
+	id = newID.String()
+	byteID := []byte(id)
+
+	//create signature
+	sign := createSignature(byteID)
+
+	//create final hex string for value in cookie
+	cookieValue = concatIDAndSignature(byteID, sign)
+	return id, cookieValue, err
+
+}
+
+func SetUUIDToRequestContext(r *http.Request, id string) *http.Request {
+	return r.WithContext(context.WithValue(r.Context(), requestContextUserIDValue{}, id))
+
+}
+
+func GetIDFromCookie(cookieValue string) (id string) {
+	decodedCookieVal, _ := hex.DecodeString(cookieValue)
+	id = getIDFromCookieVal(decodedCookieVal)
+	return id
+}
+
+func GetUUIDFromContext(ctx context.Context) string {
+	userID, _ := ctx.Value(requestContextUserIDValue{}).(string)
+	return userID
+}
+
 func ValidateCookie(cookie *http.Cookie) (bool, error) {
 	return validateID(cookie.Value)
 }
@@ -53,26 +89,6 @@ func validateIDWithSignature(id string, decodedCookieVal []byte) (valid bool) {
 	return validSignature == requestSignature
 }
 
-func CreateIDToCookie() (id string, cookieValue string, err error) {
-
-	//create uuid
-	newID, err := createUUID()
-	if err != nil {
-		log.Print(err)
-		return "", "", err
-	}
-	id = newID.String()
-	byteID := []byte(id)
-
-	//create signature
-	sign := createSignature(byteID)
-
-	//create final hex string for value in cookie
-	cookieValue = concatIDAndSignature(byteID, sign)
-	return id, cookieValue, err
-
-}
-
 func createUUID() (uuid.UUID, error) {
 	newID, err := uuid.NewV6()
 	if err != nil {
@@ -96,20 +112,4 @@ func concatIDAndSignature(byteID []byte, sign []byte) (resultStr string) {
 	strSign := hex.EncodeToString(sign)
 	resultStr = strEncodedID + strSign
 	return resultStr
-}
-
-func SetUUIDToRequestContext(r *http.Request, id string) *http.Request {
-	return r.WithContext(context.WithValue(r.Context(), requestContextUserIDValue{}, id))
-
-}
-
-func GetIDFromCookie(cookieValue string) (id string) {
-	decodedCookieVal, _ := hex.DecodeString(cookieValue)
-	id = getIDFromCookieVal(decodedCookieVal)
-	return id
-}
-
-func GetUUIDFromContext(ctx context.Context) string {
-	userID, _ := ctx.Value(requestContextUserIDValue{}).(string)
-	return userID
 }
