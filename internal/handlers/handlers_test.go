@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_CreateShortURL(t *testing.T) {
+func TestCreateShortURL(t *testing.T) {
 	config := &config.Options{
 		RunAddr:            ":8080",
 		ResponseResultAddr: "http://localhost:8080",
@@ -71,7 +71,7 @@ func Test_CreateShortURL(t *testing.T) {
 	}
 }
 
-func TestShortenerHandlers_CreateShortURLJson(t *testing.T) {
+func TestShortenerHandlersCreateShortURLJson(t *testing.T) {
 	config := &config.Options{
 		RunAddr:            ":8080",
 		ResponseResultAddr: "http://localhost:8080",
