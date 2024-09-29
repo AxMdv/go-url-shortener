@@ -10,28 +10,33 @@ import (
 )
 
 type (
+	// responseData is structure for storing information about the response
 	responseData struct {
 		status int
 		size   int
 	}
-
+	// loggingResponseWriter implements http.ResponseWriter
 	loggingResponseWriter struct {
 		http.ResponseWriter
 		responseData *responseData
 	}
 )
 
+// Write writes the response using the original http.ResponseWriter.
 func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 	size, err := r.ResponseWriter.Write(b)
 	r.responseData.size += size
 	return size, err
 }
 
+// WriteHeader writes the status code using the original http.ResponseWriter.
 func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.ResponseWriter.WriteHeader(statusCode)
 	r.responseData.status = statusCode
 }
 
+// WithLogging logs information about request and response
+// and returns a new http.Handler
 func WithLogging(h http.HandlerFunc) http.HandlerFunc {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()

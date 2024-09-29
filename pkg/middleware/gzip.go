@@ -7,6 +7,7 @@ import (
 	"github.com/AxMdv/go-url-shortener/pkg/compressor"
 )
 
+// GzipMiddleware provides gzip compressing http.Response and decompressing gzip-encoded data from http.Request.
 func GzipMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ow := w
