@@ -1,3 +1,5 @@
+// Package middleware provides handling http requests and responses.
+// There are authentication, gzip and logging middlewares.
 package middleware
 
 import (
