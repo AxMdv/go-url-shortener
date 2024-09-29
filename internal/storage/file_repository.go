@@ -78,19 +78,32 @@ func (fr *FileRepository) GetURL(_ context.Context, shortenedURL string) (string
 	return longURL, nil
 }
 
+// func (fr *FileRepository) GetURLByUserID(_ context.Context, uuid string) ([]FormedURL, error) {
+// 	shortenedURL := fr.MapUUID[uuid]
+// 	formedURL := make([]FormedURL, 0)
+// 	for _, v := range shortenedURL {
+// 		longURL, err := fr.GetURL(context.Background(), v)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		var fu FormedURL
+// 		fu.LongURL = longURL
+// 		fu.ShortenedURL = v
+// 		formedURL = append(formedURL, fu)
+// 	}
+// 	return formedURL, nil
+// }
+
 func (fr *FileRepository) GetURLByUserID(_ context.Context, uuid string) ([]FormedURL, error) {
 	shortenedURL := fr.MapUUID[uuid]
-	formedURL := make([]FormedURL, 0)
-	for _, v := range shortenedURL {
+	formedURL := make([]FormedURL, len(shortenedURL))
+	for i, v := range shortenedURL {
 		longURL, err := fr.GetURL(context.Background(), v)
 		if err != nil {
 			return nil, err
 		}
-		var fu FormedURL
-		fu.LongURL = longURL
-		fu.ShortenedURL = v
-		formedURL = append(formedURL, fu)
-
+		formedURL[i].LongURL = longURL
+		formedURL[i].ShortenedURL = v
 	}
 	return formedURL, nil
 }

@@ -274,3 +274,31 @@ func TestFileRepoDeleteURLBatch(t *testing.T) {
 // func BenchmarkFileRepoAddURL(b *testing.B) {
 // 	FileRepository := FileRepository
 // }
+
+func BenchmarkFileRepoGetURLByUserID(b *testing.B) {
+
+	config := &config.Options{
+		FileStorage: "short-url-db.json",
+	}
+	fr, err := NewFileRepository(config)
+	require.NoError(b, err)
+
+	userUUID := "01ef7cf6-286f-6e26-a782-00155dad7c8c"
+	shortenedURL := []string{"aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL", "aHR0cDovL"}
+	longURL := "http://sometext.com"
+	fr.MapUUID[userUUID] = shortenedURL
+	for _, v := range shortenedURL {
+		fr.MapURL[v] = longURL
+	}
+
+	b.ResetTimer()
+	b.Run("new", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			fr.GetURLByUserID(context.Background(), userUUID)
+		}
+	})
+	fr.Close()
+	require.NoError(b, err)
+	err = os.Remove("short-url-db.json")
+	require.NoError(b, err)
+}

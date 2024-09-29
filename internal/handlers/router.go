@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"net/http/pprof"
+
 	mw "github.com/AxMdv/go-url-shortener/pkg/middleware"
 	"github.com/go-chi/chi/v5"
 )
@@ -14,5 +16,10 @@ func NewShortenerRouter(s *ShortenerHandlers) *chi.Mux {
 	r.Post("/api/shorten/batch", mw.WithLogging(mw.SignUpMiddleware(s.CreateShortURLBatch)))
 	r.Get("/api/user/urls", mw.WithLogging(mw.ValidateUserMiddleware(mw.GzipMiddleware((s.GetAllURLByID)))))
 	r.Delete("/api/user/urls", mw.WithLogging(mw.ValidateUserMiddleware(mw.GzipMiddleware(s.DeleteURLBatch))))
+	r.HandleFunc("/debug/pprof/", pprof.Index)
+	r.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	r.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	r.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	r.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	return r
 }
