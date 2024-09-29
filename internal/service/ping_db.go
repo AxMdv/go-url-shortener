@@ -8,6 +8,7 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
+// PingDatabase pings database.
 func (s *shortenerService) PingDatabase() error {
 	value, ok := s.urlRepository.(storage.Pinger)
 

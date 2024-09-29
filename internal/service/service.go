@@ -4,6 +4,7 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
+// ShortenerService is the interface that manages shortening urls.
 type ShortenerService interface {
 	CreateShortURL(*storage.FormedURL) error
 	GetLongURL(string) (string, error)

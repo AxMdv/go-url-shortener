@@ -9,6 +9,7 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/config"
 )
 
+// DBRepository is a file-based and in-memory-based repository.
 type FileRepository struct {
 	MapURL     map[string]string   //[shortened]long
 	MapUUID    map[string][]string //[uuid][]shortened
@@ -17,6 +18,7 @@ type FileRepository struct {
 	URLSaver   *URLFileSaver
 }
 
+// NewDBRepository returns new FileRepository.
 func NewFileRepository(config *config.Options) (*FileRepository, error) {
 	repository := &FileRepository{
 		MapURL:     make(map[string]string),
@@ -47,6 +49,7 @@ func NewFileRepository(config *config.Options) (*FileRepository, error) {
 	return repository, nil
 }
 
+// AddURL writes url to FileRepository.
 func (fr *FileRepository) AddURL(_ context.Context, formedURL *FormedURL) error {
 	if fr.MapURL[formedURL.ShortenedURL] != "" {
 		return NewDuplicateError(ErrDuplicate, formedURL.ShortenedURL)
@@ -59,6 +62,7 @@ func (fr *FileRepository) AddURL(_ context.Context, formedURL *FormedURL) error 
 	return err
 }
 
+// AddURLBatch writes batch of urls to FileRepository.
 func (fr *FileRepository) AddURLBatch(_ context.Context, formedURL []FormedURL) error {
 	for _, v := range formedURL {
 		fr.MapURL[v.ShortenedURL] = v.LongURL
@@ -70,6 +74,7 @@ func (fr *FileRepository) AddURLBatch(_ context.Context, formedURL []FormedURL) 
 	return nil
 }
 
+// GetURL returns url from FileRepository.
 func (fr *FileRepository) GetURL(_ context.Context, shortenedURL string) (string, error) {
 	longURL := fr.MapURL[shortenedURL]
 	if longURL == "" {
@@ -94,6 +99,7 @@ func (fr *FileRepository) GetURL(_ context.Context, shortenedURL string) (string
 // 	return formedURL, nil
 // }
 
+// GetURLByUserID returns urls shortened by user from FileRepository.
 func (fr *FileRepository) GetURLByUserID(_ context.Context, uuid string) ([]FormedURL, error) {
 	shortenedURL := fr.MapUUID[uuid]
 	formedURL := make([]FormedURL, len(shortenedURL))
@@ -108,6 +114,7 @@ func (fr *FileRepository) GetURLByUserID(_ context.Context, uuid string) ([]Form
 	return formedURL, nil
 }
 
+// DeleteURLBatch deletes urls created by user.
 func (fr *FileRepository) DeleteURLBatch(ctx context.Context, formedURL []FormedURL) error {
 	for _, v := range formedURL {
 
@@ -125,20 +132,24 @@ func (fr *FileRepository) DeleteURLBatch(ctx context.Context, formedURL []Formed
 	return nil
 }
 
+// GetFlagByShortURL retrns if shortened url is deleted.
 func (fr *FileRepository) GetFlagByShortURL(_ context.Context, shortenedURL string) (bool, error) {
 	return fr.MapDeleted[shortenedURL], nil
 }
 
+// Close closes file of FileRepository.
 func (fr *FileRepository) Close() error {
 	err := fr.URLSaver.Close()
 	return err
 }
 
+// URLFileSaver is object that provides writing urls data to file.
 type URLFileSaver struct {
 	file   *os.File
 	writer *bufio.Writer
 }
 
+// NewURLFileSaver returns new URLFileSaver.
 func NewURLFileSaver(filename string) (*URLFileSaver, error) {
 
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
@@ -151,6 +162,7 @@ func NewURLFileSaver(filename string) (*URLFileSaver, error) {
 	}, nil
 }
 
+// WriteURL writes FormedURL to file.
 func (u *URLFileSaver) WriteURL(fu *FormedURL) error {
 	data, err := json.Marshal(&fu)
 	if err != nil {
@@ -165,17 +177,20 @@ func (u *URLFileSaver) WriteURL(fu *FormedURL) error {
 	return u.writer.Flush()
 }
 
+// Close closes file containig url data.
 func (u *URLFileSaver) Close() error {
 	err := u.file.Close()
 	return err
 }
 
+// URLFileReader is object that provides reading urls data from file.
 type URLFileReader struct {
 	file      *os.File
 	scanner   *bufio.Scanner
 	FormedURL []FormedURL
 }
 
+// NewURLReader returns new URLFileReader.
 func NewURLReader(filename string) (*URLFileReader, error) {
 	file, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
@@ -188,6 +203,7 @@ func NewURLReader(filename string) (*URLFileReader, error) {
 	}, nil
 }
 
+// ReadURL reads urls data from file.
 func (u *URLFileReader) ReadURL() error {
 	u.FormedURL = []FormedURL{}
 	for u.scanner.Scan() {
@@ -205,6 +221,7 @@ func (u *URLFileReader) ReadURL() error {
 	return nil
 }
 
+// Close closes opened file.
 func (u *URLFileReader) Close() error {
 	return u.file.Close()
 }

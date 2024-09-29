@@ -6,6 +6,7 @@ type shortenerService struct {
 	urlRepository storage.Repository
 }
 
+// NewShortenerService returns new shortenerService.
 func NewShortenerService(urlRepository storage.Repository) *shortenerService {
 	// storage.NewRepository()
 	return &shortenerService{

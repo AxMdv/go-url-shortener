@@ -18,15 +18,18 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
+// ShortenerHandlers is api handlers.
 type ShortenerHandlers struct {
 	shortenerService service.ShortenerService
 	Config           config.Options
 }
 
+// NewShortenerHandlers returns  new ShortenerHandlers with given deps.
 func NewShortenerHandlers(shortenerService service.ShortenerService, config *config.Options) *ShortenerHandlers {
 	return &ShortenerHandlers{shortenerService: shortenerService, Config: *config}
 }
 
+// CreateShortURL creates short url from long url.
 func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 	longURL, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -61,6 +64,7 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 	w.Write([]byte(res))
 }
 
+// GetLongURL returns long url from shortened url
 func (s *ShortenerHandlers) GetLongURL(w http.ResponseWriter, r *http.Request) {
 	shortenedURL := chi.URLParam(r, "shortenedURL")
 	deleted, err := s.shortenerService.GetFlagByShortURL(shortenedURL)
@@ -89,6 +93,7 @@ func (s *ShortenerHandlers) GetLongURL(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// CreateShortURLJson creates json response with shortened url from requested long url.
 func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {
@@ -142,6 +147,7 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 	w.Write(resp)
 }
 
+// CheckDatabaseConnection checks if database is online.
 func (s *ShortenerHandlers) CheckDatabaseConnection(w http.ResponseWriter, r *http.Request) {
 	if s.Config.DataBaseDSN == "" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -156,6 +162,7 @@ func (s *ShortenerHandlers) CheckDatabaseConnection(w http.ResponseWriter, r *ht
 	w.WriteHeader(http.StatusOK)
 }
 
+// CreateShortURLBatch shortens batch of long urls.
 func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.Request) {
 
 	bodyBytes, err := io.ReadAll(r.Body)
@@ -201,6 +208,7 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 	w.Write(resp)
 }
 
+// GetAllURLByID returns all urls created by user with matching user id.
 func (s *ShortenerHandlers) GetAllURLByID(w http.ResponseWriter, r *http.Request) {
 
 	uuid := auth.GetUUIDFromContext(r.Context())
@@ -228,6 +236,7 @@ func (s *ShortenerHandlers) GetAllURLByID(w http.ResponseWriter, r *http.Request
 
 }
 
+// DeleteURLBatch deletes batch of urls.
 func (s *ShortenerHandlers) DeleteURLBatch(w http.ResponseWriter, r *http.Request) {
 
 	contentType := r.Header.Get("Content-Type")

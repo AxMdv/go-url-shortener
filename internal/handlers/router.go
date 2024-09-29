@@ -8,6 +8,7 @@ import (
 	mw "github.com/AxMdv/go-url-shortener/pkg/middleware"
 )
 
+// NewShortenerRouter returns mux, which handles all application api methods and profiler methods.
 func NewShortenerRouter(s *ShortenerHandlers) *chi.Mux {
 	r := chi.NewRouter()
 	r.Post("/", mw.WithLogging(mw.SignUpMiddleware(mw.GzipMiddleware(s.CreateShortURL))))

@@ -11,10 +11,12 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/config"
 )
 
+// DBRepository is a postgres-based repository.
 type DBRepository struct {
 	db *pgxpool.Pool
 }
 
+// NewDBRepository returns new DBRepository.
 func NewDBRepository(config *config.Options) (*DBRepository, error) {
 	pool, err := pgxpool.New(context.Background(), config.DataBaseDSN)
 	if err != nil {
@@ -38,6 +40,7 @@ func NewDBRepository(config *config.Options) (*DBRepository, error) {
 	return &dbRepository, nil
 }
 
+// AddURL writes url to DB.
 func (dr *DBRepository) AddURL(ctx context.Context, formedURL *FormedURL) error {
 	query := `
 	INSERT INTO urls 
@@ -56,6 +59,7 @@ func (dr *DBRepository) AddURL(ctx context.Context, formedURL *FormedURL) error 
 	return nil
 }
 
+// AddURLBatch writes batch of urls to DB.
 func (dr *DBRepository) AddURLBatch(ctx context.Context, formedURL []FormedURL) error {
 	tx, err := dr.db.Begin(ctx)
 	if err != nil {
@@ -74,6 +78,7 @@ func (dr *DBRepository) AddURLBatch(ctx context.Context, formedURL []FormedURL) 
 	return tx.Commit(ctx)
 }
 
+// GetURL returns url from DB.
 func (dr *DBRepository) GetURL(ctx context.Context, shortenedURL string) (string, error) {
 	query := `
 	SELECT long_url from urls WHERE shortened_url = $1;
@@ -91,16 +96,19 @@ func (dr *DBRepository) GetURL(ctx context.Context, shortenedURL string) (string
 	return longURL, nil
 }
 
+// Close closes connection to DB.
 func (dr *DBRepository) Close() error {
 	dr.db.Close()
 	return nil
 }
 
+// PingDB pings DB.
 func (dr *DBRepository) PingDB(ctx context.Context) error {
 	err := dr.db.Ping(ctx)
 	return err
 }
 
+// GetURLByUserID returns urls shortened by user from DB.
 func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]FormedURL, error) {
 
 	query := "SELECT shortened_url, long_url FROM urls WHERE uuid = $1"
@@ -130,6 +138,7 @@ func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]Form
 	return resultFormedURL, nil
 }
 
+// DeleteURLBatch deletes urls created by user.
 func (dr *DBRepository) DeleteURLBatch(ctx context.Context, formedURL []FormedURL) error {
 
 	query := `UPDATE urls SET deleted_flag = $1 WHERE uuid = $2 AND shortened_url = $3;`
@@ -152,6 +161,7 @@ func (dr *DBRepository) DeleteURLBatch(ctx context.Context, formedURL []FormedUR
 
 }
 
+// GetFlagByShortURL retrns if shortened url is deleted.
 func (dr *DBRepository) GetFlagByShortURL(ctx context.Context, shortenedURL string) (bool, error) {
 	query := `
 	SELECT deleted_flag from urls WHERE shortened_url = $1;

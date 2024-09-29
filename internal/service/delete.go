@@ -13,6 +13,7 @@ type DeleteTask struct {
 	UUID         string
 }
 
+// DeleteURLBatch deletes batch of urls.
 func (s *shortenerService) DeleteURLBatch(deleteBatch storage.DeleteBatch) {
 
 	// сигнальный канал для завершения горутин
