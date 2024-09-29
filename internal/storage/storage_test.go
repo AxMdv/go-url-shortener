@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AxMdv/go-url-shortener/internal/storage/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+
+	"github.com/AxMdv/go-url-shortener/internal/storage/mocks"
 )
 
 func TestStorageGetURL(t *testing.T) {

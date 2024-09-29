@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/AxMdv/go-url-shortener/pkg/logger"
 	"go.uber.org/zap"
+
+	"github.com/AxMdv/go-url-shortener/pkg/logger"
 )
 
 type (

@@ -13,8 +13,9 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/service"
 	"github.com/AxMdv/go-url-shortener/pkg/auth"
 
-	"github.com/AxMdv/go-url-shortener/internal/storage"
 	"github.com/go-chi/chi/v5"
+
+	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
 type ShortenerHandlers struct {

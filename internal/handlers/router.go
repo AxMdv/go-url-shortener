@@ -3,8 +3,9 @@ package handlers
 import (
 	"net/http/pprof"
 
-	mw "github.com/AxMdv/go-url-shortener/pkg/middleware"
 	"github.com/go-chi/chi/v5"
+
+	mw "github.com/AxMdv/go-url-shortener/pkg/middleware"
 )
 
 func NewShortenerRouter(s *ShortenerHandlers) *chi.Mux {
