@@ -28,3 +28,6 @@ vendor/
 
 # urs inside json
 tmp/short-url-db.json
+
+# staticcheck config
+staticcheck.conf

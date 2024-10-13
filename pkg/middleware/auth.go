@@ -1,3 +1,5 @@
+// Package middleware provides handling http requests and responses.
+// There are authentication, gzip and logging middlewares.
 package middleware
 
 import (
@@ -9,6 +11,8 @@ import (
 
 const cookieName = "user_id"
 
+// SignUpMiddleware sets cookie to http.ResponseWriter if http.Request doesn`t have necessary cookie or cookie is invalid.
+// Also it sets user UUID to context of a http.Request.
 func SignUpMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -52,6 +56,9 @@ func SignUpMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// ValidateUserMiddleware validates http.Cookie of a http.Request.
+// If cookie is valid user UUID is set to request context.
+// If cookie is invalid this function returns http.StatusUnauthorized.
 func ValidateUserMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(cookieName)

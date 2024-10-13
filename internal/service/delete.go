@@ -8,11 +8,13 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
+// DeleteTask contain data about user id and url to delete.
 type DeleteTask struct {
 	ShortenedURL string
 	UUID         string
 }
 
+// DeleteURLBatch deletes batch of urls.
 func (s *shortenerService) DeleteURLBatch(deleteBatch storage.DeleteBatch) {
 
 	// сигнальный канал для завершения горутин

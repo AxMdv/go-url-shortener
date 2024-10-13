@@ -1,3 +1,4 @@
+// Package storage is designed to create requests to database.
 package storage
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/config"
 )
 
+// Repository is the interface that stores urls.
 type Repository interface {
 	AddURL(context.Context, *FormedURL) error
 	AddURLBatch(context.Context, []FormedURL) error
@@ -17,6 +19,7 @@ type Repository interface {
 	GetFlagByShortURL(context.Context, string) (bool, error)
 }
 
+// NewRepository returns repository, that implements Repository interface.
 func NewRepository(config *config.Options) (Repository, error) {
 	if config.DataBaseDSN != "" {
 		return NewDBRepository(config)
@@ -27,6 +30,7 @@ func NewRepository(config *config.Options) (Repository, error) {
 	return NewRAMRepository()
 }
 
+// FormedURL is data of an url.
 type FormedURL struct {
 	UUID          string `json:"uuid,omitempty"`
 	CorrelationID string `json:"correlation_id,omitempty"`
@@ -37,14 +41,18 @@ type FormedURL struct {
 
 // .............................................................
 
+// AddURLError is duplicating error.
 type AddURLError struct {
 	DuplicateValue string
 	Err            error
 }
 
+// Error is provided to implement Error interface.
 func (ae *AddURLError) Error() string {
 	return fmt.Sprintf("%v %v", ae.DuplicateValue, ae.Err)
 }
+
+// NewDuplicateError return new AddURLError.
 func NewDuplicateError(err error, shortenedURL string) error {
 	return &AddURLError{
 		DuplicateValue: shortenedURL,
@@ -52,39 +60,48 @@ func NewDuplicateError(err error, shortenedURL string) error {
 	}
 }
 
+// ErrDuplicate is duplicate error.
 var ErrDuplicate = errors.New("url already exists")
 
 // .............................................................
 
+// NoContentError is error when there is no wanted data.
 type NoContentError struct {
-	UIID string
+	UUID string
 	Err  error
 }
 
+// Error is provided to implement Error interface.
 func (nc *NoContentError) Error() string {
-	return fmt.Sprintf("%v %v", nc.UIID, nc.Err)
+	return fmt.Sprintf("%v %v", nc.UUID, nc.Err)
 }
 
+// NewNoContentError returns new NoContentError.
 func NewNoContentError(err error, uuid string) error {
 	return &NoContentError{
-		UIID: uuid,
+		UUID: uuid,
 		Err:  err,
 	}
 }
 
+// ErrNoContent is  error when there is no wanted data.
 var ErrNoContent = errors.New("no urls created by current user ")
 
 // .............................................................
+
+// Pinger is an interface that pings DB.
 type Pinger interface {
 	PingDB(context.Context) error
 }
 
+// Closer is an interface that can close DB.
 type Closer interface {
 	Close() error
 }
 
 // .............................................................
 
+// DeleteBatch is struct to delete batch of urls.
 type DeleteBatch struct {
 	ShortenedURL []string
 	UUID         string

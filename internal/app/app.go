@@ -1,3 +1,4 @@
+// Package app is the implementation of shortener app.
 package app
 
 import (
@@ -13,18 +14,20 @@ import (
 	"github.com/AxMdv/go-url-shortener/pkg/logger"
 )
 
+// App is an application of url shortener
 type App struct {
 	urlService service.ShortenerService
 
 	urlRepository storage.Repository
 
 	configOptions *config.Options
-
+	// ShortenerHandlers is api handlers
 	ShortenerHandlers *handlers.ShortenerHandlers
 
 	router *chi.Mux
 }
 
+// NewApp creates a new app of a URL shortener
 func NewApp() (*App, error) {
 
 	config := config.ParseOptions()
@@ -55,6 +58,7 @@ func NewApp() (*App, error) {
 	return a, nil
 }
 
+// Run is a main process of working application
 func (a *App) Run() error {
 	return a.runHTTPServer()
 }

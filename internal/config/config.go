@@ -1,3 +1,4 @@
+// Package config describes options to run the app.
 package config
 
 import (
@@ -5,13 +6,19 @@ import (
 	"os"
 )
 
+// Options is parameters of running applications.
 type Options struct {
-	RunAddr            string
+	// RunAddr is the address and port to run server.
+	RunAddr string
+	// Resut basic response address (before shortened URL).
 	ResponseResultAddr string
-	FileStorage        string
-	DataBaseDSN        string
+	// Path to save shortened URLs.
+	FileStorage string
+	// DSN for acees to DB.
+	DataBaseDSN string
 }
 
+// ParseOptions parses cmd flags and os environment variables.
 func ParseOptions() *Options {
 	Options := Options{}
 	flag.StringVar(&Options.RunAddr, "a", ":8080", "address and port to run server")

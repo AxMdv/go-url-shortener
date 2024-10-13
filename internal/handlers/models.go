@@ -6,19 +6,22 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
+// Request is a default request struct.
 type Request struct {
 	URL string `json:"url"`
 }
 
+// Response is a default request struct.
 type Response struct {
 	Result string `json:"result"`
 }
 
-// ........................................................
+// RequestBatch is a struct of BatchList.
 type RequestBatch struct {
 	BatchList []BatchOriginal
 }
 
+// ToFormed transform RequestBatch to  slice of FormedURL.
 func (rb *RequestBatch) ToFormed(uuid string) []storage.FormedURL {
 	countReqBatch := len(rb.BatchList)
 	urlData := make([]storage.FormedURL, countReqBatch)
@@ -33,15 +36,18 @@ func (rb *RequestBatch) ToFormed(uuid string) []storage.FormedURL {
 	return urlData
 }
 
+// BatchOriginal is requested batch item.
 type BatchOriginal struct {
 	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"original_url"`
 }
 
+// ResponseBatch is a struct of shortened BatchList.
 type ResponseBatch struct {
 	BatchList []BatchShortened
 }
 
+// BatchShortened is batch url for response.
 type BatchShortened struct {
 	CorrelationID string `json:"correlation_id"`
 	ShortenedURL  string `json:"short_url"`
