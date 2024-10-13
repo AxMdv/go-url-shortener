@@ -28,9 +28,7 @@ type App struct {
 }
 
 // NewApp creates a new app of a URL shortener
-func NewApp() (*App, error) {
-
-	config := config.ParseOptions()
+func NewApp(config *config.Options) (*App, error) {
 
 	err := logger.InitLogger()
 	if err != nil {

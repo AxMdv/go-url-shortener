@@ -4,9 +4,9 @@ import "context"
 
 // RAMRepository is in-memory repository.
 type RAMRepository struct {
-	MapURL     map[string]string   //[shortened]long
-	MapUUID    map[string][]string //[uuid][]shortened
-	MapDeleted map[string]bool     //[shortened]deleted_flag
+	MapURL     map[string]string   // [shortened]long
+	MapUUID    map[string][]string // [uuid][]shortened
+	MapDeleted map[string]bool     // [shortened]deleted_flag
 }
 
 // NewRAMRepository returns new RAMRepository.
