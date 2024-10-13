@@ -23,7 +23,7 @@ func ParseOptions() *Options {
 	Options := Options{}
 	flag.StringVar(&Options.RunAddr, "a", ":8080", "address and port to run server")
 	flag.StringVar(&Options.ResponseResultAddr, "b", "http://localhost:8080", "resut basic response address (before shortened URL)")
-	flag.StringVar(&Options.FileStorage, "f", "./tmp/short-url-db.json", "path to save shortened URLs")
+	flag.StringVar(&Options.FileStorage, "f", "/tmp/short-url-db.json", "path to save shortened URLs")
 	flag.StringVar(&Options.DataBaseDSN, "d", "", "dsn for acees to DB")
 	flag.Parse()
 
