@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/AxMdv/go-url-shortener/internal/app"
+	"github.com/AxMdv/go-url-shortener/internal/config"
 )
 
 // go run -ldflags "-X main.buildVersion=v1.0.1 -X 'main.buildDate=$(date +'%Y/%m/%d %H:%M:%S')' -X main.buildCommit=hello world" main.go
@@ -33,7 +34,8 @@ func main() {
 
 	printBuildInfo()
 
-	a, err := app.NewApp()
+	cfg := config.ParseOptions()
+	a, err := app.NewApp(cfg)
 	if err != nil {
 		log.Fatalf("failed to init app: %s", err.Error())
 	}
