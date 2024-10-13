@@ -78,7 +78,7 @@ func (rr *RAMRepository) DeleteURLBatch(ctx context.Context, formedURL []FormedU
 	return nil
 }
 
-// GetFlagByShortURL retrns if shortened url is deleted.
+// GetFlagByShortURL returns if shortened url is deleted.
 func (rr *RAMRepository) GetFlagByShortURL(_ context.Context, shortenedURL string) (bool, error) {
 	return rr.MapDeleted[shortenedURL], nil
 }

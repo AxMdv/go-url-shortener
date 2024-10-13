@@ -1,3 +1,4 @@
+// Package handlers is an api to shortener app.
 package handlers
 
 import (

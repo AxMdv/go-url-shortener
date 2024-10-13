@@ -1,3 +1,4 @@
+// Package app is the implementation of shortener app.
 package app
 
 import (

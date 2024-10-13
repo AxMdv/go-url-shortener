@@ -66,7 +66,7 @@ func NewCompressReader(r io.ReadCloser) (*compressReader, error) {
 	}, nil
 }
 
-// Read reads gzip-scompressed data.
+// Read reads gzip-compressed data.
 func (c compressReader) Read(p []byte) (n int, err error) {
 	return c.zr.Read(p)
 }

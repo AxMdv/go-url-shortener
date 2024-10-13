@@ -9,7 +9,7 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/config"
 )
 
-// DBRepository is a file-based and in-memory-based repository.
+// FileRepository is a file-based and in-memory-based repository.
 type FileRepository struct {
 	MapURL     map[string]string   //[shortened]long
 	MapUUID    map[string][]string //[uuid][]shortened
@@ -18,7 +18,7 @@ type FileRepository struct {
 	URLSaver   *URLFileSaver
 }
 
-// NewDBRepository returns new FileRepository.
+// NewFileRepository returns new FileRepository.
 func NewFileRepository(config *config.Options) (*FileRepository, error) {
 	repository := &FileRepository{
 		MapURL:     make(map[string]string),
@@ -132,7 +132,7 @@ func (fr *FileRepository) DeleteURLBatch(ctx context.Context, formedURL []Formed
 	return nil
 }
 
-// GetFlagByShortURL retrns if shortened url is deleted.
+// GetFlagByShortURL returns if shortened url is deleted.
 func (fr *FileRepository) GetFlagByShortURL(_ context.Context, shortenedURL string) (bool, error) {
 	return fr.MapDeleted[shortenedURL], nil
 }
@@ -177,7 +177,7 @@ func (u *URLFileSaver) WriteURL(fu *FormedURL) error {
 	return u.writer.Flush()
 }
 
-// Close closes file containig url data.
+// Close closes file containing url data.
 func (u *URLFileSaver) Close() error {
 	err := u.file.Close()
 	return err

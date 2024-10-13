@@ -1,3 +1,4 @@
+// Package storage is designed to create requests to database.
 package storage
 
 import (
@@ -66,19 +67,19 @@ var ErrDuplicate = errors.New("url already exists")
 
 // NoContentError is error when there is no wanted data.
 type NoContentError struct {
-	UIID string
+	UUID string
 	Err  error
 }
 
 // Error is provided to implement Error interface.
 func (nc *NoContentError) Error() string {
-	return fmt.Sprintf("%v %v", nc.UIID, nc.Err)
+	return fmt.Sprintf("%v %v", nc.UUID, nc.Err)
 }
 
 // NewNoContentError returns new NoContentError.
 func NewNoContentError(err error, uuid string) error {
 	return &NoContentError{
-		UIID: uuid,
+		UUID: uuid,
 		Err:  err,
 	}
 }
@@ -100,7 +101,7 @@ type Closer interface {
 
 // .............................................................
 
-// DeleteBatch is stuct to delete batch of urls.
+// DeleteBatch is struct to delete batch of urls.
 type DeleteBatch struct {
 	ShortenedURL []string
 	UUID         string
