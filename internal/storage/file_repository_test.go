@@ -5,9 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AxMdv/go-url-shortener/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/AxMdv/go-url-shortener/internal/config"
 )
 
 func TestNewFileRepository(t *testing.T) {

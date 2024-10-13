@@ -5,9 +5,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/AxMdv/go-url-shortener/internal/config"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/AxMdv/go-url-shortener/internal/config"
 )
 
 type DBRepository struct {

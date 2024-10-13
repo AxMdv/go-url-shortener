@@ -13,8 +13,9 @@ import (
 	context "context"
 	reflect "reflect"
 
-	storage "github.com/AxMdv/go-url-shortener/internal/storage"
 	gomock "go.uber.org/mock/gomock"
+
+	storage "github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
 // MockRepository is a mock of Repository interface.
