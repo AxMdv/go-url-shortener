@@ -2,13 +2,13 @@ package service
 
 import "github.com/AxMdv/go-url-shortener/internal/storage"
 
-type service struct {
+type shortenerService struct {
 	urlRepository storage.Repository
 }
 
-func NewShortenerService(urlRepository storage.Repository) *service {
+func NewShortenerService(urlRepository storage.Repository) *shortenerService {
 	// storage.NewRepository()
-	return &service{
+	return &shortenerService{
 		urlRepository: urlRepository,
 	}
 }

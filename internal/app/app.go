@@ -4,12 +4,13 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/AxMdv/go-url-shortener/internal/config"
 	"github.com/AxMdv/go-url-shortener/internal/handlers"
 	"github.com/AxMdv/go-url-shortener/internal/service"
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 	"github.com/AxMdv/go-url-shortener/pkg/logger"
-	"github.com/go-chi/chi/v5"
 )
 
 type App struct {

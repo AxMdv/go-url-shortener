@@ -8,7 +8,12 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
-func (s *service) DeleteURLBatch(deleteBatch storage.DeleteBatch) {
+type DeleteTask struct {
+	ShortenedURL string
+	UUID         string
+}
+
+func (s *shortenerService) DeleteURLBatch(deleteBatch storage.DeleteBatch) {
 
 	// сигнальный канал для завершения горутин
 	doneCh := make(chan struct{})
@@ -141,9 +146,4 @@ func fanIn(doneCh chan struct{}, resultChs ...chan storage.FormedURL) chan stora
 
 	// возвращаем результирующий канал
 	return finalCh
-}
-
-type DeleteTask struct {
-	ShortenedURL string
-	UUID         string
 }

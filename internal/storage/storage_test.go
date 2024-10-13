@@ -11,7 +11,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestGetURL(t *testing.T) {
+func TestStorageGetURL(t *testing.T) {
 	type want struct {
 		longURL string
 	}
