@@ -22,7 +22,7 @@ type requestContextUserIDValue struct{}
 // CreateIDToCookie returns id of a current user, and cookieValue - concatenation of user ID and signature.
 func CreateIDToCookie() (id string, cookieValue string, err error) {
 
-	//create uuid
+	// create uuid
 	newID, err := createUUID()
 	if err != nil {
 		log.Print(err)
@@ -31,10 +31,10 @@ func CreateIDToCookie() (id string, cookieValue string, err error) {
 	id = newID.String()
 	byteID := []byte(id)
 
-	//create signature
+	// create signature
 	sign := createSignature(byteID)
 
-	//create final hex string for value in cookie
+	// create final hex string for value in cookie
 	cookieValue = concatIDAndSignature(byteID, sign)
 	return id, cookieValue, err
 

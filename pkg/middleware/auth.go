@@ -17,11 +17,11 @@ func SignUpMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		cookie, err := r.Cookie(cookieName)
-		//если куки нет
+		// если куки нет
 		if err != nil {
-			id, cookieValue, err := auth.CreateIDToCookie()
-			if err != nil {
-				log.Println("can`t create id to cookie", err)
+			id, cookieValue, createErr := auth.CreateIDToCookie()
+			if createErr != nil {
+				log.Println("can`t create id to cookie", createErr)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}

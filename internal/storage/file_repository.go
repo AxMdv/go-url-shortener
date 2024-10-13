@@ -11,9 +11,9 @@ import (
 
 // FileRepository is a file-based and in-memory-based repository.
 type FileRepository struct {
-	MapURL     map[string]string   //[shortened]long
-	MapUUID    map[string][]string //[uuid][]shortened
-	MapDeleted map[string]bool     //[shortened]deleted_flag
+	MapURL     map[string]string   // [shortened]long
+	MapUUID    map[string][]string // [uuid][]shortened
+	MapDeleted map[string]bool     // [shortened]deleted_flag
 	filename   string
 	URLSaver   *URLFileSaver
 }
