@@ -8,6 +8,7 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
+// OsExitAnalyzer checks if os.Exit() is called in main function.
 var OsExitAnalyzer = &analysis.Analyzer{
 	Name: "osexitmain",
 	Doc:  "check for calling os exit in main",

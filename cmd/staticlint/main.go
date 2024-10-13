@@ -4,80 +4,16 @@
 // 1. Move to current folder: cd ./cmd/staticlint
 // 2. Build binary: [go build -o multichecker.exe main.go]
 // 3. Analyze your project with binary: [mulichecker.exe <path to your project>/...]. E.g.: multichecker.exe github.com/AxMdv/go-url-shortener/...
-package main
-
-import (
-	"github.com/AxMdv/go-url-shortener/cmd/staticlint/osexitanalyzer"
-	gs "github.com/go-critic/go-critic/checkers/analyzer"
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/multichecker"
-	"golang.org/x/tools/go/analysis/passes/printf"
-	"golang.org/x/tools/go/analysis/passes/shadow"
-	"golang.org/x/tools/go/analysis/passes/structtag"
-	"honnef.co/go/tools/quickfix"
-	"honnef.co/go/tools/staticcheck"
-)
-
-func main() {
-
-	var analyzers []*analysis.Analyzer
-
-	analyzers = append(analyzers, getStandarStaticAnalyzers()...)
-
-	analyzers = append(analyzers, getStaticcheckAnalyzers()...)
-
-	analyzers = append(analyzers, getQuickfixAnalyzers()...)
-
-	analyzers = append(analyzers, getCommunityAnalyzers()...)
-
-	// imports os exit (in main) analyzer
-	analyzers = append(analyzers, osexitanalyzer.OsExitAnalyzer)
-
-	multichecker.Main(
-		analyzers...,
-	)
-}
-
-// getCommunityAnalyzers returns public analyzers.
-func getCommunityAnalyzers() []*analysis.Analyzer {
-	var analyzers []*analysis.Analyzer
-	analyzers = append(analyzers, gs.Analyzer)
-	// analyzers = append(analyzers, gs.PathTraversalAnalyzer, gs.SQLInjectionAnalyzer)
-	return analyzers
-
-}
-
-// getStandarStaticAnalyzers returns some standart static analyzers.
-func getStandarStaticAnalyzers() []*analysis.Analyzer {
-	var analyzers []*analysis.Analyzer
-	analyzers = append(analyzers,
-		printf.Analyzer,
-		shadow.Analyzer,
-		structtag.Analyzer)
-	return analyzers
-}
-
-// getStaticcheckAnalyzers returns staticcheck analyzers.
-func getStaticcheckAnalyzers() []*analysis.Analyzer {
-	var analyzers []*analysis.Analyzer
-	for _, v := range staticcheck.Analyzers {
-		analyzers = append(analyzers, v.Analyzer)
-	}
-	return analyzers
-}
-
-// getStaticcheckAnalyzers returns quickfix analyzers.
-func getQuickfixAnalyzers() []*analysis.Analyzer {
-	var analyzers []*analysis.Analyzer
-	for _, v := range quickfix.Analyzers {
-		analyzers = append(analyzers, v.Analyzer)
-	}
-	return analyzers
-}
-
-// Check	Short description
-// --------------------------
-// SA		staticcheck
+//
+// List of multichecker analyzers:
+//
+// 1. Standart (golang.org/x/tools/go/analysis/passes):
+//
+//	printf: check consistency of Printf format strings and arguments
+//	shadow: check for possible unintended shadowing of variables
+//	structtag defines an Analyzer that checks struct field tags are well formed.
+//
+// 2. Staticcheck (SA) analyzers of staticcheck.io:
 // SA1		Various misuses of the standard library
 // SA1000	Invalid regular expression
 // SA1001	Invalid template
@@ -180,65 +116,8 @@ func getQuickfixAnalyzers() []*analysis.Analyzer {
 // SA9007	Deleting a directory that shouldn’t be deleted
 // SA9008	else branch of a type assertion is probably not reading the right value
 // SA9009	Ineffectual Go compiler directive
-// S	simple
-// S1	Code simplifications
-// S1000	Use plain channel send or receive instead of single-case select
-// S1001	Replace for loop with call to copy
-// S1002	Omit comparison with boolean constant
-// S1003	Replace call to strings.Index with strings.Contains
-// S1004	Replace call to bytes.Compare with bytes.Equal
-// S1005	Drop unnecessary use of the blank identifier
-// S1006	Use for { ... } for infinite loops
-// S1007	Simplify regular expression by using raw string literal
-// S1008	Simplify returning boolean expression
-// S1009	Omit redundant nil check on slices, maps, and channels
-// S1010	Omit default slice index
-// S1011	Use a single append to concatenate two slices
-// S1012	Replace time.Now().Sub(x) with time.Since(x)
-// S1016	Use a type conversion instead of manually copying struct fields
-// S1017	Replace manual trimming with strings.TrimPrefix
-// S1018	Use copy for sliding elements
-// S1019	Simplify make call by omitting redundant arguments
-// S1020	Omit redundant nil check in type assertion
-// S1021	Merge variable declaration and assignment
-// S1023	Omit redundant control flow
-// S1024	Replace x.Sub(time.Now()) with time.Until(x)
-// S1025	Don’t use fmt.Sprintf("%s", x) unnecessarily
-// S1028	Simplify error construction with fmt.Errorf
-// S1029	Range over the string directly
-// S1030	Use bytes.Buffer.String or bytes.Buffer.Bytes
-// S1031	Omit redundant nil check around loop
-// S1032	Use sort.Ints(x), sort.Float64s(x), and sort.Strings(x)
-// S1033	Unnecessary guard around call to delete
-// S1034	Use result of type assertion to simplify cases
-// S1035	Redundant call to net/http.CanonicalHeaderKey in method call on net/http.Header
-// S1036	Unnecessary guard around map access
-// S1037	Elaborate way of sleeping
-// S1038	Unnecessarily complex way of printing formatted string
-// S1039	Unnecessary use of fmt.Sprint
-// S1040	Type assertion to current type
-// ST	stylecheck
-// ST1	Stylistic issues
-// ST1000	Incorrect or missing package comment
-// ST1001	Dot imports are discouraged
-// ST1003	Poorly chosen identifier
-// ST1005	Incorrectly formatted error string
-// ST1006	Poorly chosen receiver name
-// ST1008	A function’s error value should be its last return value
-// ST1011	Poorly chosen name for variable of type time.Duration
-// ST1012	Poorly chosen name for error variable
-// ST1013	Should use constants for HTTP error codes, not magic numbers
-// ST1015	A switch’s default case should be the first or last case
-// ST1016	Use consistent method receiver names
-// ST1017	Don’t use Yoda conditions
-// ST1018	Avoid zero-width and control characters in string literals
-// ST1019	Importing the same package multiple times
-// ST1020	The documentation of an exported function should start with the function’s name
-// ST1021	The documentation of an exported type should start with type’s name
-// ST1022	The documentation of an exported variable or constant should start with variable’s name
-// ST1023	Redundant type in variable declaration
-// QF	quickfix
-// QF1	Quickfixes
+//
+// 3. Quickfix (QF) analyzers of staticcheck.io:
 // QF1001	Apply De Morgan’s law
 // QF1002	Convert untagged switch to tagged switch
 // QF1003	Convert if/else-if chain to tagged switch
@@ -251,3 +130,77 @@ func getQuickfixAnalyzers() []*analysis.Analyzer {
 // QF1010	Convert slice of bytes to string when printing it
 // QF1011	Omit redundant type from variable declaration
 // QF1012	Use fmt.Fprintf(x, ...) instead of x.Write(fmt.Sprintf(...))
+//
+// 4. Public analyzer ("github.com/go-critic/go-critic/checkers/analyzer")
+//
+// 5. Custom osexitanalyzer ("github.com/AxMdv/go-url-shortener/cmd/staticlint/osexitanalyzer")
+package main
+
+import (
+	"github.com/AxMdv/go-url-shortener/cmd/staticlint/osexitanalyzer"
+	gs "github.com/go-critic/go-critic/checkers/analyzer"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/multichecker"
+	"golang.org/x/tools/go/analysis/passes/printf"
+	"golang.org/x/tools/go/analysis/passes/shadow"
+	"golang.org/x/tools/go/analysis/passes/structtag"
+	"honnef.co/go/tools/quickfix"
+	"honnef.co/go/tools/staticcheck"
+)
+
+func main() {
+
+	var analyzers []*analysis.Analyzer
+
+	analyzers = append(analyzers, getStandarStaticAnalyzers()...)
+
+	analyzers = append(analyzers, getStaticcheckAnalyzers()...)
+
+	analyzers = append(analyzers, getQuickfixAnalyzers()...)
+
+	analyzers = append(analyzers, getCommunityAnalyzers()...)
+
+	// imports os exit (in main) analyzer
+	analyzers = append(analyzers, osexitanalyzer.OsExitAnalyzer)
+
+	multichecker.Main(
+		analyzers...,
+	)
+}
+
+// getStandarStaticAnalyzers returns some standart static analyzers.
+func getStandarStaticAnalyzers() []*analysis.Analyzer {
+	var analyzers []*analysis.Analyzer
+	analyzers = append(analyzers,
+		printf.Analyzer,
+		shadow.Analyzer,
+		structtag.Analyzer)
+	return analyzers
+}
+
+// getStaticcheckAnalyzers returns staticcheck analyzers.
+func getStaticcheckAnalyzers() []*analysis.Analyzer {
+	var analyzers []*analysis.Analyzer
+	for _, v := range staticcheck.Analyzers {
+		analyzers = append(analyzers, v.Analyzer)
+	}
+	return analyzers
+}
+
+// getStaticcheckAnalyzers returns quickfix analyzers.
+func getQuickfixAnalyzers() []*analysis.Analyzer {
+	var analyzers []*analysis.Analyzer
+	for _, v := range quickfix.Analyzers {
+		analyzers = append(analyzers, v.Analyzer)
+	}
+	return analyzers
+}
+
+// getCommunityAnalyzers returns public analyzers.
+func getCommunityAnalyzers() []*analysis.Analyzer {
+	var analyzers []*analysis.Analyzer
+	analyzers = append(analyzers, gs.Analyzer)
+	// analyzers = append(analyzers, gs.PathTraversalAnalyzer, gs.SQLInjectionAnalyzer)
+	return analyzers
+
+}
