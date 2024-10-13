@@ -53,8 +53,8 @@ func TestFileRepoAddURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := fr.AddURL(context.Background(), tt.formedURL)
-			assert.Equal(t, tt.want.err, err)
+			tErr := fr.AddURL(context.Background(), tt.formedURL)
+			assert.Equal(t, tt.want.err, tErr)
 			longURL := fr.MapURL[tt.formedURL.ShortenedURL]
 			assert.Equal(t, tt.formedURL.LongURL, longURL)
 		})
@@ -96,8 +96,8 @@ func TestFileRepoAddURLBatch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := fr.AddURLBatch(context.Background(), tt.formedURL)
-			assert.Equal(t, tt.want.err, err)
+			tErr := fr.AddURLBatch(context.Background(), tt.formedURL)
+			assert.Equal(t, tt.want.err, tErr)
 			for _, v := range tt.formedURL {
 				assert.Contains(t, fr.MapURL, v.ShortenedURL)
 			}
@@ -141,11 +141,11 @@ func TestFileRepoGetURL(t *testing.T) {
 	require.NoError(t, err)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := fr.AddURL(context.Background(), tt.formedURL)
-			require.NoError(t, err)
+			eErr := fr.AddURL(context.Background(), tt.formedURL)
+			require.NoError(t, eErr)
 
-			longURL, err := fr.GetURL(context.Background(), tt.shortenedURL)
-			assert.Equal(t, tt.want.err, err)
+			longURL, eErr := fr.GetURL(context.Background(), tt.shortenedURL)
+			assert.Equal(t, tt.want.err, eErr)
 			assert.Equal(t, tt.want.longURL, longURL)
 		})
 	}
@@ -192,11 +192,11 @@ func TestFileRepoGetURLByUserID(t *testing.T) {
 	require.NoError(t, err)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := fr.AddURL(context.Background(), tt.formedURL)
-			require.NoError(t, err)
+			tErr := fr.AddURL(context.Background(), tt.formedURL)
+			require.NoError(t, tErr)
 
-			formedURL, err := fr.GetURLByUserID(context.Background(), tt.uuid)
-			assert.Equal(t, tt.want.err, err)
+			formedURL, tErr := fr.GetURLByUserID(context.Background(), tt.uuid)
+			assert.Equal(t, tt.want.err, tErr)
 			assert.ElementsMatch(t, tt.want.formedURL, formedURL)
 		})
 	}
@@ -212,9 +212,9 @@ func TestFileRepoDeleteURLBatch(t *testing.T) {
 		err         error
 	}
 	type maps struct {
-		MapURL     map[string]string   //[shortened]long
-		MapUUID    map[string][]string //[uuid][]shortened
-		MapDeleted map[string]bool     //[shortened]deleted_flag
+		MapURL     map[string]string   // [shortened]long
+		MapUUID    map[string][]string // [uuid][]shortened
+		MapDeleted map[string]bool     // [shortened]deleted_flag
 	}
 	tests := []struct {
 		name      string
@@ -258,8 +258,8 @@ func TestFileRepoDeleteURLBatch(t *testing.T) {
 			fr.MapUUID = tt.maps.MapUUID
 			fr.MapDeleted = tt.maps.MapDeleted
 
-			err := fr.DeleteURLBatch(context.Background(), tt.formedURL)
-			assert.Equal(t, tt.want.err, err)
+			tErr := fr.DeleteURLBatch(context.Background(), tt.formedURL)
+			assert.Equal(t, tt.want.err, tErr)
 			for _, v := range tt.formedURL {
 				deletedFlag := fr.MapDeleted[v.ShortenedURL]
 				assert.Equal(t, tt.want.deletedFlag, deletedFlag)

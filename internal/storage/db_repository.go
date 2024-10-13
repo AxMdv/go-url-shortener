@@ -122,12 +122,12 @@ func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]Form
 	resultFormedURL := make([]FormedURL, 0)
 	for rows.Next() {
 		var fu FormedURL
-		err := rows.Scan(&fu.ShortenedURL, &fu.LongURL)
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
+		scanErr := rows.Scan(&fu.ShortenedURL, &fu.LongURL)
+		if scanErr != nil {
+			if errors.Is(scanErr, pgx.ErrNoRows) {
 				return nil, NewNoContentError(ErrNoContent, uuid)
 			}
-			return nil, err
+			return nil, scanErr
 		}
 		resultFormedURL = append(resultFormedURL, fu)
 	}

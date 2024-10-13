@@ -121,8 +121,8 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 
 			res := fmt.Sprintf("%s/%s", s.Config.ResponseResultAddr, duplicateErr.DuplicateValue)
 			response := Response{Result: res}
-			resp, err := json.Marshal(response)
-			if err != nil {
+			resp, marshalErr := json.Marshal(response)
+			if marshalErr != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
