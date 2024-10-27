@@ -16,6 +16,8 @@ type Options struct {
 	FileStorage string
 	// DSN for acees to DB.
 	DataBaseDSN string
+	// Enable HTTPS
+	EnableHTTPS bool
 }
 
 // ParseOptions parses cmd flags and os environment variables.
@@ -25,6 +27,7 @@ func ParseOptions() *Options {
 	flag.StringVar(&options.ResponseResultAddr, "b", "http://localhost:8080", "resut basic response address (before shortened URL)")
 	flag.StringVar(&options.FileStorage, "f", "/tmp/short-url-db.json", "path to save shortened URLs")
 	flag.StringVar(&options.DataBaseDSN, "d", "", "dsn for acees to DB")
+	flag.BoolVar(&options.EnableHTTPS, "s", false, "enable https")
 	flag.Parse()
 
 	if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
@@ -37,6 +40,9 @@ func ParseOptions() *Options {
 		options.FileStorage = envFileStorage
 	}
 	if envDataBaseDSN := os.Getenv("DATABASE_DSN"); envDataBaseDSN != "" {
+		options.DataBaseDSN = envDataBaseDSN
+	}
+	if envDataBaseDSN := os.Getenv("ENABLE_HTTPS"); envDataBaseDSN != "" {
 		options.DataBaseDSN = envDataBaseDSN
 	}
 	return &options
