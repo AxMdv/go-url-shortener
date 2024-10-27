@@ -1,9 +1,9 @@
 // This package is main package of multichecker.
 //
 // Guide to use multichecker:
-// 1. Move to current folder: cd ./cmd/staticlint
-// 2. Build binary: [go build -o multichecker.exe main.go]
-// 3. Analyze your project with binary: [mulichecker.exe <path to your project>/...]. E.g.: multichecker.exe github.com/AxMdv/go-url-shortener/...
+// 1. Move to current folder: cd ./cmd/staticlint.
+// 2. Build binary: [go build -o multichecker.exe main.go].
+// 3. Analyze your project with binary: [mulichecker.exe <path to your project>/...]. E.g.: <multichecker.exe github.com/AxMdv/go-url-shortener/...>.
 //
 // List of multichecker analyzers:
 //
