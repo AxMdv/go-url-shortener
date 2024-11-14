@@ -38,3 +38,5 @@ certs/
 my notes.md
 
 *.html
+
+cmd/debug

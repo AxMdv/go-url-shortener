@@ -11,7 +11,7 @@ type RAMRepository struct {
 
 // NewRAMRepository returns new RAMRepository.
 func NewRAMRepository() (*RAMRepository, error) {
-	return &RAMRepository{MapURL: make(map[string]string), MapUUID: make(map[string][]string)}, nil
+	return &RAMRepository{MapURL: make(map[string]string), MapUUID: make(map[string][]string), MapDeleted: make(map[string]bool)}, nil
 }
 
 // AddURL writes url to RAMRepository.
