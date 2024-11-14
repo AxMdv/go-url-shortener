@@ -34,3 +34,7 @@ staticcheck.conf
 
 #tls certs
 certs/
+
+my notes.md
+
+*.html

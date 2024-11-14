@@ -35,9 +35,6 @@ func (rr *RAMRepository) AddURLBatch(_ context.Context, formedURL []FormedURL) e
 // GetURL returns url from RAMRepository.
 func (rr *RAMRepository) GetURL(_ context.Context, shortenedURL string) (string, error) {
 	longURL := rr.MapURL[shortenedURL]
-	if longURL == "" {
-		return "", nil
-	}
 	return longURL, nil
 }
 
