@@ -129,6 +129,7 @@ func TestShortenerHandlersGetLongURL(t *testing.T) {
 			}
 			resp, err := client.Do(request)
 			require.NoError(t, err)
+			defer resp.Body.Close()
 			longURL := resp.Header.Get("Location")
 			fmt.Println(longURL)
 
@@ -234,6 +235,7 @@ func TestShortenerHandlersCheckDatabaseConnection(t *testing.T) {
 			w := httptest.NewRecorder()
 			shortenerHandlers.CheckDatabaseConnection(w, request)
 			result := w.Result()
+			defer result.Body.Close()
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 		})
@@ -325,6 +327,7 @@ func TestShortenerHandlersCreateShortURLBatch(t *testing.T) {
 
 			respBody, err := io.ReadAll(resp.Body)
 			require.NoError(t, err)
+			defer resp.Body.Close()
 			responseBatch := make([]BatchShortened, len(tt.requestBatch))
 			err = json.Unmarshal(respBody, &responseBatch)
 			require.NoError(t, err)
@@ -394,6 +397,7 @@ func TestShortenerHandlersGetAllURLByID(t *testing.T) {
 				req.Header.Set("Content-Type", "text/html")
 				resp, err := http.DefaultClient.Do(req)
 				require.NoError(t, err)
+				resp.Body.Close()
 				fmt.Printf("%+v", req)
 				require.Equal(t, 201, resp.StatusCode)
 			}
@@ -406,6 +410,7 @@ func TestShortenerHandlersGetAllURLByID(t *testing.T) {
 
 			respBody, err := io.ReadAll(resp.Body)
 			require.NoError(t, err)
+			defer resp.Body.Close()
 			responseBatch := make([]storage.FormedURL, len(tt.want.responseBatch))
 			err = json.Unmarshal(respBody, &responseBatch)
 			require.NoError(t, err)
@@ -469,6 +474,7 @@ func TestShortenerHandlersDeleteURLBatch(t *testing.T) {
 			client := &http.Client{}
 			resp, err := client.Do(request)
 			require.NoError(t, err)
+			defer resp.Body.Close()
 
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 		})
