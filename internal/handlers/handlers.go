@@ -155,7 +155,6 @@ func (s *ShortenerHandlers) CheckDatabaseConnection(w http.ResponseWriter, r *ht
 		return
 	}
 	err := s.shortenerService.PingDatabase()
-	// err := storage.PingDatabase(s.Config)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
