@@ -3,6 +3,8 @@ package auth
 import (
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func BenchmarkCreateIDToCookie(b *testing.B) {
@@ -34,4 +36,10 @@ func BenchmarkValidateCookie(b *testing.B) {
 			ValidateCookie(cookie)
 		}
 	})
+}
+
+func TestCreateIDToCookie(t *testing.T) {
+	_, _, err := CreateIDToCookie()
+	require.NoError(t, err)
+
 }
