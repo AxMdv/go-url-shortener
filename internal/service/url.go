@@ -1,6 +1,7 @@
 // Package service is service layer package of an app.
 package service
 
+// ShortenerService is main type that implements handlers.IShortenerService
 type ShortenerService struct {
 	urlRepository IRepository
 }

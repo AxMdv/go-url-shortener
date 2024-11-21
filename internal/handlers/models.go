@@ -53,12 +53,4 @@ type BatchShortened struct {
 	ShortenedURL  string `json:"short_url"`
 }
 
-type FormedURL struct {
-	UUID          string `json:"uuid,omitempty"`
-	CorrelationID string `json:"correlation_id,omitempty"`
-	ShortenedURL  string `json:"short_url,omitempty"`
-	LongURL       string `json:"original_url,omitempty"`
-	DeletedFlag   bool   `json:"deleted_flag,omitempty"`
-}
-
 // ........................................................
