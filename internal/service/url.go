@@ -1,15 +1,14 @@
+// Package service is service layer package of an app.
 package service
 
-import "github.com/AxMdv/go-url-shortener/internal/storage"
-
-type shortenerService struct {
-	urlRepository storage.Repository
+type ShortenerService struct {
+	urlRepository IRepository
 }
 
 // NewShortenerService returns new shortenerService.
-func NewShortenerService(urlRepository storage.Repository) *shortenerService {
+func NewShortenerService(urlRepository IRepository) *ShortenerService {
 	// storage.NewRepository()
-	return &shortenerService{
+	return &ShortenerService{
 		urlRepository: urlRepository,
 	}
 }

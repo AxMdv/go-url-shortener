@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
+	"github.com/AxMdv/go-url-shortener/internal/model"
 )
 
 // FileRepository is a file-based and in-memory-based repository.
@@ -50,7 +51,7 @@ func NewFileRepository(config *config.Options) (*FileRepository, error) {
 }
 
 // AddURL writes url to FileRepository.
-func (fr *FileRepository) AddURL(_ context.Context, formedURL *FormedURL) error {
+func (fr *FileRepository) AddURL(_ context.Context, formedURL *model.FormedURL) error {
 	if fr.MapURL[formedURL.ShortenedURL] != "" {
 		return NewDuplicateError(ErrDuplicate, formedURL.ShortenedURL)
 	}
@@ -63,7 +64,7 @@ func (fr *FileRepository) AddURL(_ context.Context, formedURL *FormedURL) error 
 }
 
 // AddURLBatch writes batch of urls to FileRepository.
-func (fr *FileRepository) AddURLBatch(_ context.Context, formedURL []FormedURL) error {
+func (fr *FileRepository) AddURLBatch(_ context.Context, formedURL []model.FormedURL) error {
 	for _, v := range formedURL {
 		fr.MapURL[v.ShortenedURL] = v.LongURL
 		err := fr.URLSaver.WriteURL(&v)
@@ -100,9 +101,9 @@ func (fr *FileRepository) GetURL(_ context.Context, shortenedURL string) (string
 // }
 
 // GetURLByUserID returns urls shortened by user from FileRepository.
-func (fr *FileRepository) GetURLByUserID(_ context.Context, uuid string) ([]FormedURL, error) {
+func (fr *FileRepository) GetURLByUserID(_ context.Context, uuid string) ([]model.FormedURL, error) {
 	shortenedURL := fr.MapUUID[uuid]
-	formedURL := make([]FormedURL, len(shortenedURL))
+	formedURL := make([]model.FormedURL, len(shortenedURL))
 	for i, v := range shortenedURL {
 		longURL, err := fr.GetURL(context.Background(), v)
 		if err != nil {
@@ -115,7 +116,7 @@ func (fr *FileRepository) GetURLByUserID(_ context.Context, uuid string) ([]Form
 }
 
 // DeleteURLBatch deletes urls created by user.
-func (fr *FileRepository) DeleteURLBatch(ctx context.Context, formedURL []FormedURL) error {
+func (fr *FileRepository) DeleteURLBatch(ctx context.Context, formedURL []model.FormedURL) error {
 	for _, v := range formedURL {
 
 		sliceShortened := fr.MapUUID[v.UUID]
@@ -163,7 +164,7 @@ func NewURLFileSaver(filename string) (*URLFileSaver, error) {
 }
 
 // WriteURL writes FormedURL to file.
-func (u *URLFileSaver) WriteURL(fu *FormedURL) error {
+func (u *URLFileSaver) WriteURL(fu *model.FormedURL) error {
 	data, err := json.Marshal(&fu)
 	if err != nil {
 		return err
@@ -187,7 +188,7 @@ func (u *URLFileSaver) Close() error {
 type URLFileReader struct {
 	file      *os.File
 	scanner   *bufio.Scanner
-	FormedURL []FormedURL
+	FormedURL []model.FormedURL
 }
 
 // NewURLReader returns new URLFileReader.
@@ -205,10 +206,10 @@ func NewURLReader(filename string) (*URLFileReader, error) {
 
 // ReadURL reads urls data from file.
 func (u *URLFileReader) ReadURL() error {
-	u.FormedURL = []FormedURL{}
+	u.FormedURL = []model.FormedURL{}
 	for u.scanner.Scan() {
 		data := u.scanner.Bytes()
-		tempFormed := FormedURL{}
+		tempFormed := model.FormedURL{}
 		err := json.Unmarshal(data, &tempFormed)
 		if err != nil {
 			return err

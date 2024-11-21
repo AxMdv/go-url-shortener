@@ -16,9 +16,9 @@ import (
 
 // App is an application of url shortener
 type App struct {
-	urlService service.ShortenerService
+	urlService handlers.IShortenerService
 
-	urlRepository storage.Repository
+	urlRepository service.IRepository
 
 	configOptions *config.Options
 	// ShortenerHandlers is api handlers

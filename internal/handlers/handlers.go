@@ -11,7 +11,7 @@ import (
 	"errors"
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
-	"github.com/AxMdv/go-url-shortener/internal/service"
+	"github.com/AxMdv/go-url-shortener/internal/model"
 	"github.com/AxMdv/go-url-shortener/pkg/auth"
 
 	"github.com/go-chi/chi/v5"
@@ -21,12 +21,12 @@ import (
 
 // ShortenerHandlers is api handlers.
 type ShortenerHandlers struct {
-	shortenerService service.ShortenerService
+	shortenerService IShortenerService
 	Config           config.Options
 }
 
 // NewShortenerHandlers returns  new ShortenerHandlers with given deps.
-func NewShortenerHandlers(shortenerService service.ShortenerService, config *config.Options) *ShortenerHandlers {
+func NewShortenerHandlers(shortenerService IShortenerService, config *config.Options) *ShortenerHandlers {
 	return &ShortenerHandlers{shortenerService: shortenerService, Config: *config}
 }
 
@@ -40,7 +40,7 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 	}
 	shortenedURL := s.shortenerService.ShortenLongURL(longURL)
 
-	formedURL := &storage.FormedURL{
+	formedURL := &model.FormedURL{
 		UUID:         auth.GetUUIDFromContext(r.Context()),
 		ShortenedURL: shortenedURL,
 		LongURL:      string(longURL),
@@ -108,7 +108,7 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 	}
 
 	shortenedURL := s.shortenerService.ShortenLongURL([]byte(request.URL))
-	formedURL := &storage.FormedURL{
+	formedURL := &model.FormedURL{
 		UUID:         auth.GetUUIDFromContext(r.Context()),
 		ShortenedURL: shortenedURL,
 		LongURL:      request.URL,
@@ -247,7 +247,7 @@ func (s *ShortenerHandlers) DeleteURLBatch(w http.ResponseWriter, r *http.Reques
 
 	uuid := auth.GetUUIDFromContext(r.Context())
 
-	var deleteBatch storage.DeleteBatch
+	var deleteBatch model.DeleteBatch
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
