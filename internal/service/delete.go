@@ -15,7 +15,7 @@ type DeleteTask struct {
 }
 
 // DeleteURLBatch deletes batch of urls.
-func (s *shortenerService) DeleteURLBatch(deleteBatch storage.DeleteBatch) {
+func (s *shortenerService) DeleteURLBatch(deleteBatch storage.DeleteBatch) error {
 
 	// сигнальный канал для завершения горутин
 	doneCh := make(chan struct{})
@@ -32,13 +32,13 @@ func (s *shortenerService) DeleteURLBatch(deleteBatch storage.DeleteBatch) {
 	// а теперь объединяем десять каналов в один
 	formResultCh := fanIn(doneCh, channels...)
 
-	var FormedToDelete []storage.FormedURL
+	var formedToDelete []storage.FormedURL
 	for form := range formResultCh {
-		FormedToDelete = append(FormedToDelete, form)
+		formedToDelete = append(formedToDelete, form)
 	}
 
-	s.urlRepository.DeleteURLBatch(ctx, FormedToDelete)
-
+	err := s.urlRepository.DeleteURLBatch(ctx, formedToDelete)
+	return err
 }
 
 func generator(doneCh chan struct{}, input storage.DeleteBatch) chan DeleteTask {
