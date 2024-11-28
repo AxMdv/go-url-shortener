@@ -1,4 +1,3 @@
-// Package service is service layer of shortener app.
 package handlers
 
 import (
