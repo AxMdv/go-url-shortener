@@ -101,7 +101,9 @@ func (a *App) runHTTPServer() error {
 }
 
 func (a *App) processInterrupt(sigint chan os.Signal, idleConnsClosed chan struct{}) {
+	log.Println("waiting for ctrl+c.....")
 	<-sigint
+	log.Println("recieved ctrl+c.....")
 	if err := a.server.Shutdown(context.Background()); err != nil {
 		// ошибки закрытия Listener
 		log.Printf("HTTP server Shutdown: %v", err)
@@ -118,9 +120,15 @@ func (a *App) gracefullShutdown() error {
 	var err error
 	if ok {
 		err = closerRepo.Close()
+		if err != nil {
+			log.Println("error in closing repo", err)
+		}
 		if err == nil {
 			log.Println("success in closing repo")
 		}
+	} else {
+		log.Println("current repo doesn`t have method Close()")
 	}
+
 	return err
 }
