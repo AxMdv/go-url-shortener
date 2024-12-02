@@ -86,7 +86,9 @@ func (a *App) Run() error {
 	err := a.gracefullShutdown()
 	if err != nil {
 		fmt.Print(err)
+		return err
 	}
+	log.Println("shutting down...")
 	return err
 }
 
@@ -122,10 +124,9 @@ func (a *App) gracefullShutdown() error {
 		err = closerRepo.Close()
 		if err != nil {
 			log.Println("error in closing repo", err)
+			return err
 		}
-		if err == nil {
-			log.Println("success in closing repo")
-		}
+		log.Println("success in closing repo")
 	} else {
 		log.Println("current repo doesn`t have method Close()")
 	}
