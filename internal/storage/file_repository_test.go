@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
+	"github.com/AxMdv/go-url-shortener/internal/model"
 )
 
 func TestNewFileRepository(t *testing.T) {
@@ -30,12 +31,12 @@ func TestFileRepoAddURL(t *testing.T) {
 	}
 	tests := []struct {
 		name      string
-		formedURL *FormedURL
+		formedURL *model.FormedURL
 		want      want
 	}{
 		{
 			name: "Positive test #1",
-			formedURL: &FormedURL{
+			formedURL: &model.FormedURL{
 				UUID:         "01ef7cf6-286f-6e26-a782-00155dad7c8c",
 				ShortenedURL: "aHR0cDovL2ZwMXZpZTh0dXphMXB0LnJ1L3Ztd3dxMndhL2xuYjR1",
 				LongURL:      "http://fp1vie8tuza1pt.ru/vmwwq2wa/lnb4u",
@@ -71,12 +72,12 @@ func TestFileRepoAddURLBatch(t *testing.T) {
 	}
 	tests := []struct {
 		name      string
-		formedURL []FormedURL
+		formedURL []model.FormedURL
 		want      want
 	}{
 		{
 			name: "Positive test #1",
-			formedURL: []FormedURL{
+			formedURL: []model.FormedURL{
 				{
 					UUID:         "01ef7cf6-286f-6e26-a782-00155dad7c8c",
 					ShortenedURL: "aHR0cDovL2ZwMXZpZTh0dXphMXB0LnJ1L3Ztd3dxMndhL2xuYjR1",
@@ -116,13 +117,13 @@ func TestFileRepoGetURL(t *testing.T) {
 	}
 	tests := []struct {
 		name         string
-		formedURL    *FormedURL
+		formedURL    *model.FormedURL
 		shortenedURL string
 		want         want
 	}{
 		{
 			name: "Positive test #1",
-			formedURL: &FormedURL{
+			formedURL: &model.FormedURL{
 				UUID:         "01ef7cf6-286f-6e26-a782-00155dad7c8c",
 				ShortenedURL: "aHR0cDovL2ZwMXZpZTh0dXphMXB0LnJ1L3Ztd3dxMndhL2xuYjR1",
 				LongURL:      "http://fp1vie8tuza1pt.ru/vmwwq2wa/lnb4u",
@@ -157,25 +158,25 @@ func TestFileRepoGetURL(t *testing.T) {
 
 func TestFileRepoGetURLByUserID(t *testing.T) {
 	type want struct {
-		formedURL []FormedURL
+		formedURL []model.FormedURL
 		err       error
 	}
 	tests := []struct {
 		name      string
 		uuid      string
-		formedURL *FormedURL
+		formedURL *model.FormedURL
 		want      want
 	}{
 		{
 			name: "Positive test #1",
 			uuid: "01ef7cf6-286f-6e26-a782-00155dad7c8c",
-			formedURL: &FormedURL{
+			formedURL: &model.FormedURL{
 				UUID:         "01ef7cf6-286f-6e26-a782-00155dad7c8c",
 				ShortenedURL: "aHR0cDovL2ZwMXZpZTh0dXphMXB0LnJ1L3Ztd3dxMndhL2xuYjR1",
 				LongURL:      "http://fp1vie8tuza1pt.ru/vmwwq2wa/lnb4u",
 			},
 			want: want{
-				formedURL: []FormedURL{
+				formedURL: []model.FormedURL{
 					{
 						ShortenedURL: "aHR0cDovL2ZwMXZpZTh0dXphMXB0LnJ1L3Ztd3dxMndhL2xuYjR1",
 						LongURL:      "http://fp1vie8tuza1pt.ru/vmwwq2wa/lnb4u",
@@ -218,13 +219,13 @@ func TestFileRepoDeleteURLBatch(t *testing.T) {
 	}
 	tests := []struct {
 		name      string
-		formedURL []FormedURL
+		formedURL []model.FormedURL
 		maps      maps
 		want      want
 	}{
 		{
 			name: "Positive test #1",
-			formedURL: []FormedURL{
+			formedURL: []model.FormedURL{
 				{
 					UUID:         "01ef7cf6-286f-6e26-a782-00155dad7c8c",
 					ShortenedURL: "aHR0cDovL2ZwMXZpZTh0dXphMXB0LnJ1L3Ztd3dxMndhL2xuYjR1",

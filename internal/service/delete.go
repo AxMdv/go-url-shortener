@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AxMdv/go-url-shortener/internal/storage"
+	"github.com/AxMdv/go-url-shortener/internal/model"
 )
 
 // DeleteTask contain data about user id and url to delete.
@@ -15,7 +15,7 @@ type DeleteTask struct {
 }
 
 // DeleteURLBatch deletes batch of urls.
-func (s *shortenerService) DeleteURLBatch(deleteBatch storage.DeleteBatch) {
+func (s *ShortenerService) DeleteURLBatch(deleteBatch model.DeleteBatch) error {
 
 	// сигнальный канал для завершения горутин
 	doneCh := make(chan struct{})
@@ -32,16 +32,16 @@ func (s *shortenerService) DeleteURLBatch(deleteBatch storage.DeleteBatch) {
 	// а теперь объединяем десять каналов в один
 	formResultCh := fanIn(doneCh, channels...)
 
-	var FormedToDelete []storage.FormedURL
+	var formedToDelete []model.FormedURL
 	for form := range formResultCh {
-		FormedToDelete = append(FormedToDelete, form)
+		formedToDelete = append(formedToDelete, form)
 	}
 
-	s.urlRepository.DeleteURLBatch(ctx, FormedToDelete)
-
+	err := s.urlRepository.DeleteURLBatch(ctx, formedToDelete)
+	return err
 }
 
-func generator(doneCh chan struct{}, input storage.DeleteBatch) chan DeleteTask {
+func generator(doneCh chan struct{}, input model.DeleteBatch) chan DeleteTask {
 	inputCh := make(chan DeleteTask)
 
 	go func() {
@@ -65,15 +65,15 @@ func generator(doneCh chan struct{}, input storage.DeleteBatch) chan DeleteTask 
 }
 
 // form функция из предыдущего примера, делает то же, что и делала
-func form(doneCh chan struct{}, inputCh chan DeleteTask) chan storage.FormedURL {
-	formRes := make(chan storage.FormedURL)
+func form(doneCh chan struct{}, inputCh chan DeleteTask) chan model.FormedURL {
+	formRes := make(chan model.FormedURL)
 
 	go func() {
 		defer close(formRes)
 
 		for data := range inputCh {
 
-			formed := storage.FormedURL{
+			formed := model.FormedURL{
 				UUID:         data.UUID,
 				ShortenedURL: data.ShortenedURL,
 			}
@@ -89,11 +89,11 @@ func form(doneCh chan struct{}, inputCh chan DeleteTask) chan storage.FormedURL 
 }
 
 // fanOut принимает канал данных, порождает 10 горутин
-func fanOut(doneCh chan struct{}, inputCh chan DeleteTask) []chan storage.FormedURL {
+func fanOut(doneCh chan struct{}, inputCh chan DeleteTask) []chan model.FormedURL {
 	// количество горутин add
 	numWorkers := 10
 	// каналы, в которые отправляются результаты
-	channels := make([]chan storage.FormedURL, numWorkers)
+	channels := make([]chan model.FormedURL, numWorkers)
 
 	for i := 0; i < numWorkers; i++ {
 		// получаем канал из горутины add
@@ -107,9 +107,9 @@ func fanOut(doneCh chan struct{}, inputCh chan DeleteTask) []chan storage.Formed
 }
 
 // fanIn объединяет несколько каналов resultChs в один.
-func fanIn(doneCh chan struct{}, resultChs ...chan storage.FormedURL) chan storage.FormedURL {
+func fanIn(doneCh chan struct{}, resultChs ...chan model.FormedURL) chan model.FormedURL {
 	// конечный выходной канал в который отправляем данные из всех каналов из слайса, назовём его результирующим
-	finalCh := make(chan storage.FormedURL)
+	finalCh := make(chan model.FormedURL)
 
 	// понадобится для ожидания всех горутин
 	var wg sync.WaitGroup

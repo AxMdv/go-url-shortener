@@ -31,3 +31,12 @@ tmp/short-url-db.json
 
 # staticcheck config
 staticcheck.conf
+
+#tls certs
+certs/
+
+my notes.md
+
+*.html
+
+cmd/debug
