@@ -78,9 +78,11 @@ func (a *App) Run() error {
 
 	go a.processInterrupt(sigint, idleConnsClosed)
 
-	if err := a.runHTTPServer(); err != http.ErrServerClosed {
-		return err
-	}
+	go func() {
+		if err := a.runHTTPServer(); err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
 
 	<-idleConnsClosed
 	err := a.gracefullShutdown()
