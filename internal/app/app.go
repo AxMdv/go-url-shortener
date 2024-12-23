@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -73,10 +72,9 @@ func NewApp(config *config.Options) (*App, error) {
 // Run is a main process of working application
 func (a *App) Run() error {
 	fmt.Printf("%+v", a.configOptions)
-	idleConnsClosed := make(chan struct{})
 
-	sigint := make(chan os.Signal, 1)
-	signal.Notify(sigint, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	defer stop()
 
 	go func() {
 		if err := a.runHTTPServer(); err != http.ErrServerClosed {
@@ -84,10 +82,16 @@ func (a *App) Run() error {
 		}
 	}()
 	fmt.Println("after runhttpserver")
-	go a.processInterrupt(sigint, idleConnsClosed)
-	fmt.Println("after processInterrupt")
-	<-idleConnsClosed
-	fmt.Println("got idleconclose")
+	<-ctx.Done()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := a.server.Shutdown(ctx); err != nil {
+		// ошибки закрытия Listener
+		log.Printf("error in HTTP server Shutdown: %v", err)
+	} else {
+		log.Println("successfully stopped http server")
+	}
+
 	err := a.gracefullShutdown()
 	if err != nil {
 		fmt.Print(err)
@@ -105,21 +109,6 @@ func (a *App) runHTTPServer() error {
 	}
 	log.Printf("HTTP server is running on %s", a.configOptions.RunAddr)
 	return a.server.ListenAndServe()
-}
-
-func (a *App) processInterrupt(sigint chan os.Signal, idleConnsClosed chan struct{}) {
-	log.Println("waiting for ctrl+c.....")
-	<-sigint
-	log.Println("recieved ctrl+c.....")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := a.server.Shutdown(ctx); err != nil {
-		// ошибки закрытия Listener
-		log.Printf("error in HTTP server Shutdown: %v", err)
-	} else {
-		log.Println("successfully stopped http server")
-	}
-	close(idleConnsClosed)
 }
 
 func (a *App) gracefullShutdown() error {

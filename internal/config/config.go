@@ -85,3 +85,7 @@ func ParseOptions() *Options {
 }
 
 // dsn := "user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable"
+
+// set FILE_STORAGE_PATH=''
+// shortenertestbeta -test.v -test.run=^TestIteration1$ -binary-path=cmd/shortener/shortener
+// shortenertestbeta -test.v -test.run=^TestIteration12$ -binary-path=cmd/shortener/shortener -database-dsn='user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable'
