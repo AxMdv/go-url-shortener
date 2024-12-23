@@ -71,35 +71,34 @@ func NewApp(config *config.Options) (*App, error) {
 
 // Run is a main process of working application
 func (a *App) Run() error {
-	fmt.Printf("%+v", a.configOptions)
+	fmt.Printf("%+v\n", a.configOptions)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	defer stop()
-
 	go func() {
-		if err := a.runHTTPServer(); err != http.ErrServerClosed {
-			log.Fatal(err)
+		fmt.Println("waiting for ctrl+c")
+		<-ctx.Done()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := a.server.Shutdown(shutdownCtx); err != nil {
+			// ошибки закрытия Listener
+			log.Println("error in HTTP server Shutdown: %v", err)
+
+		} else {
+			log.Println("successfully stopped http server")
 		}
 	}()
-	fmt.Println("after runhttpserver")
-	<-ctx.Done()
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := a.server.Shutdown(ctx); err != nil {
-		// ошибки закрытия Listener
-		log.Printf("error in HTTP server Shutdown: %v", err)
-		return err
-	} else {
-		log.Println("successfully stopped http server")
+	if err := a.runHTTPServer(); err != http.ErrServerClosed {
+		log.Fatal(err)
 	}
-
 	err := a.gracefullShutdown()
 	if err != nil {
-		fmt.Print(err)
-		return err
+		log.Print(err)
 	}
 	log.Println("shutting down...")
-	return err
+	fmt.Println("after runhttpserver")
+
+	return nil
 }
 
 func (a *App) runHTTPServer() error {
@@ -114,7 +113,7 @@ func (a *App) runHTTPServer() error {
 
 func (a *App) gracefullShutdown() error {
 	// close repo if it has method close()
-	log.Println("trying to close repository..")
+	fmt.Println("trying to close repository..")
 	_, ok := a.urlRepository.(Closer)
 	var err error
 	if ok {
