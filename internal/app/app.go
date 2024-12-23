@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -78,11 +79,14 @@ func (a *App) Run() error {
 
 	go func() {
 		if err := a.runHTTPServer(); err != http.ErrServerClosed {
-			log.Fatal(err)
+			log.Panic(err)
 		}
 	}()
+	fmt.Println("after runhttpserver")
 	a.processInterrupt(sigint, idleConnsClosed)
+	fmt.Println("after processInterrupt")
 	<-idleConnsClosed
+	fmt.Println("got idleconclose")
 	err := a.gracefullShutdown()
 	if err != nil {
 		fmt.Print(err)
@@ -106,7 +110,9 @@ func (a *App) processInterrupt(sigint chan os.Signal, idleConnsClosed chan struc
 	log.Println("waiting for ctrl+c.....")
 	<-sigint
 	log.Println("recieved ctrl+c.....")
-	if err := a.server.Shutdown(context.Background()); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := a.server.Shutdown(ctx); err != nil {
 		// ошибки закрытия Listener
 		log.Printf("error in HTTP server Shutdown: %v", err)
 	} else {
