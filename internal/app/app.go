@@ -110,7 +110,7 @@ func (a *App) processInterrupt(sigint chan os.Signal, idleConnsClosed chan struc
 	log.Println("recieved ctrl+c.....")
 	if err := a.server.Shutdown(context.Background()); err != nil {
 		// ошибки закрытия Listener
-		log.Printf("HTTP server Shutdown: %v", err)
+		log.Printf("error in HTTP server Shutdown: %v", err)
 	} else {
 		log.Println("successfully stopped http server")
 	}
@@ -120,7 +120,7 @@ func (a *App) processInterrupt(sigint chan os.Signal, idleConnsClosed chan struc
 func (a *App) gracefullShutdown() error {
 	// close repo if it has method close()
 	log.Println("trying to close repository..")
-	closerRepo, ok := a.urlRepository.(service.Closer)
+	closerRepo, ok := a.urlRepository.(Closer)
 	var err error
 	if ok {
 		err = closerRepo.Close()
