@@ -72,6 +72,7 @@ func NewApp(config *config.Options) (*App, error) {
 
 // Run is a main process of working application
 func (a *App) Run() error {
+	fmt.Printf("%+v", a.configOptions)
 	idleConnsClosed := make(chan struct{})
 
 	sigint := make(chan os.Signal, 1)
