@@ -82,7 +82,7 @@ func (a *App) Run() error {
 		defer cancel()
 		if err := a.server.Shutdown(shutdownCtx); err != nil {
 			// ошибки закрытия Listener
-			log.Println("error in HTTP server Shutdown: %v", err)
+			log.Printf("error in HTTP server Shutdown: %v\n", err)
 
 		} else {
 			log.Println("successfully stopped http server")
