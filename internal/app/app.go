@@ -79,11 +79,11 @@ func (a *App) Run() error {
 
 	go func() {
 		if err := a.runHTTPServer(); err != http.ErrServerClosed {
-			log.Panic(err)
+			log.Fatal(err)
 		}
 	}()
 	fmt.Println("after runhttpserver")
-	a.processInterrupt(sigint, idleConnsClosed)
+	go a.processInterrupt(sigint, idleConnsClosed)
 	fmt.Println("after processInterrupt")
 	<-idleConnsClosed
 	fmt.Println("got idleconclose")

@@ -27,7 +27,7 @@ vendor/
 .env
 
 # urs inside json
-tmp/short-url-db.json
+tmp/
 
 # staticcheck config
 staticcheck.conf
