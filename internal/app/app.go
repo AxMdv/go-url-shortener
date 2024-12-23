@@ -88,6 +88,7 @@ func (a *App) Run() error {
 	if err := a.server.Shutdown(ctx); err != nil {
 		// ошибки закрытия Listener
 		log.Printf("error in HTTP server Shutdown: %v", err)
+		return err
 	} else {
 		log.Println("successfully stopped http server")
 	}
@@ -114,10 +115,10 @@ func (a *App) runHTTPServer() error {
 func (a *App) gracefullShutdown() error {
 	// close repo if it has method close()
 	log.Println("trying to close repository..")
-	closerRepo, ok := a.urlRepository.(Closer)
+	_, ok := a.urlRepository.(Closer)
 	var err error
 	if ok {
-		err = closerRepo.Close()
+		err = a.urlRepository.(Closer).Close()
 		if err != nil {
 			log.Println("error in closing repo", err)
 			return err
