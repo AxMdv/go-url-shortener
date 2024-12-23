@@ -76,14 +76,12 @@ func (a *App) Run() error {
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	go a.processInterrupt(sigint, idleConnsClosed)
-
 	go func() {
 		if err := a.runHTTPServer(); err != http.ErrServerClosed {
 			log.Fatal(err)
 		}
 	}()
-
+	a.processInterrupt(sigint, idleConnsClosed)
 	<-idleConnsClosed
 	err := a.gracefullShutdown()
 	if err != nil {
