@@ -29,7 +29,7 @@ func ParseOptions() *Options {
 
 	flag.StringVar(&options.RunAddr, "a", ":8080", "address and port to run server")
 	flag.StringVar(&options.ResponseResultAddr, "b", "http://localhost:8080", "resut basic response address (before shortened URL)")
-	flag.StringVar(&options.FileStorage, "f", "/tmp/short-url-db.json", "path to save shortened URLs")
+	flag.StringVar(&options.FileStorage, "f", "tmp/short-url-db.json", "path to save shortened URLs")
 	flag.StringVar(&options.DataBaseDSN, "d", "", "dsn for acees to DB")
 	flag.BoolVar(&options.EnableHTTPS, "s", false, "enable https")
 	flag.StringVar(&options.ConfigPath, "c", "", "path to config file")
@@ -85,7 +85,11 @@ func ParseOptions() *Options {
 }
 
 // dsn := "user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable"
-
+// -database-dsn='postgresql://postgres:adm@127.0.0.1:5432/postgres?sslmode=disable'
+// -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 // set FILE_STORAGE_PATH=''
 // shortenertestbeta -test.v -test.run=^TestIteration1$ -binary-path=cmd/shortener/shortener
-// shortenertestbeta -test.v -test.run=^TestIteration12$ -binary-path=cmd/shortener/shortener -database-dsn='user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable'
+//-database-dsn='postgresql://postgres:adm@127.0.0.1:5432/postgres?sslmode=disable'
+
+// shortenertest -test.v -test.run=^TestIteration11$ -binary-path=cmd/shortener/shortener -database-dsn='postgresql://postgres:adm@127.0.0.1:5432/postgres?sslmode=disable'
+// shortenertest -test.v -test.run=^TestIteration11$ -binary-path=cmd/shortener/shortener -file-storage-path="./tmp/short-url-db.json" -server-port="8080" -source-path="." -database-dsn="user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable"

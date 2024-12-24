@@ -89,7 +89,7 @@ func (a *App) Run() error {
 		}
 	}()
 	if err := a.runHTTPServer(); err != http.ErrServerClosed {
-		log.Fatal(err)
+		log.Panicln(err)
 	}
 	err := a.gracefullShutdown()
 	if err != nil {
