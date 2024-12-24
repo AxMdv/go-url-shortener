@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/AxMdv/go-url-shortener/internal/model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,13 +14,13 @@ func TestRAMRepoAddURL(t *testing.T) {
 	}
 	tests := []struct {
 		name          string
-		formedURL     *FormedURL
+		formedURL     *model.FormedURL
 		ramRepository RAMRepository
 		want          want
 	}{
 		{
 			name: "Positive test #1",
-			formedURL: &FormedURL{
+			formedURL: &model.FormedURL{
 				UUID:         "01ef7cf6-286f-6e26-a782-00155dad7c8c",
 				ShortenedURL: "aHR0cDovL2ZwMXZpZTh0dXphMXB0LnJ1L3Ztd3dxMndhL2xuYjR1",
 				LongURL:      "http://fp1vie8tuza1pt.ru/vmwwq2wa/lnb4u",
@@ -51,7 +52,7 @@ func BenchmarkRAMRepoAddURL(b *testing.B) {
 		MapUUID:    make(map[string][]string),
 		MapDeleted: make(map[string]bool),
 	}
-	formedURL := &FormedURL{
+	formedURL := &model.FormedURL{
 		UUID:         "01ef7cf6-286f-6e26-a782-00155dad7c8c",
 		ShortenedURL: "aHR0cDovL2ZwMXZpZTh0dXphMXB0LnJ1L3Ztd3dxMndhL2xuYjR1",
 		LongURL:      "http://fp1vie8tuza1pt.ru/vmwwq2wa/lnb4u",
@@ -107,7 +108,7 @@ func BenchmarkRAMRepoGetURL(b *testing.B) {
 		MapUUID:    make(map[string][]string),
 		MapDeleted: make(map[string]bool),
 	}
-	formedURL := &FormedURL{
+	formedURL := &model.FormedURL{
 		UUID:         "01ef7cf6-286f-6e26-a782-00155dad7c8c",
 		ShortenedURL: "aHR0cDovL2ZwMXZpZTh0dXphMXB0LnJ1L3Ztd3dxMndhL2xuYjR1",
 		LongURL:      "http://fp1vie8tuza1pt.ru/vmwwq2wa/lnb4u",
@@ -121,7 +122,7 @@ func BenchmarkRAMRepoGetURL(b *testing.B) {
 }
 func TestRAMRepoGetURLByUserID(t *testing.T) {
 	type want struct {
-		formedURL []FormedURL
+		formedURL []model.FormedURL
 		err       error
 	}
 	tests := []struct {
@@ -143,7 +144,7 @@ func TestRAMRepoGetURLByUserID(t *testing.T) {
 				MapDeleted: make(map[string]bool),
 			},
 			want: want{
-				formedURL: []FormedURL{
+				formedURL: []model.FormedURL{
 					{
 						ShortenedURL: "aHR0cDovL2ZwMXZpZTh0dXphMXB0LnJ1L3Ztd3dxMndhL2xuYjR1",
 						LongURL:      "http://fp1vie8tuza1pt.ru/vmwwq2wa/lnb4u",
@@ -170,13 +171,13 @@ func TestRAMRepoDeleteURLBatch(t *testing.T) {
 	}
 	tests := []struct {
 		name          string
-		formedURL     []FormedURL
+		formedURL     []model.FormedURL
 		ramRepository RAMRepository
 		want          want
 	}{
 		{
 			name: "Positive test #1",
-			formedURL: []FormedURL{
+			formedURL: []model.FormedURL{
 				{
 					UUID:         "01ef7cf6-286f-6e26-a782-00155dad7c8c",
 					ShortenedURL: "aHR0cDovL2ZwMXZpZTh0dXphMXB0LnJ1L3Ztd3dxMndhL2xuYjR1",

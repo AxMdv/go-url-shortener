@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
+	"github.com/AxMdv/go-url-shortener/internal/model"
 )
 
 // DBRepository is a postgres-based repository.
@@ -41,7 +42,7 @@ func NewDBRepository(config *config.Options) (*DBRepository, error) {
 }
 
 // AddURL writes url to DB.
-func (dr *DBRepository) AddURL(ctx context.Context, formedURL *FormedURL) error {
+func (dr *DBRepository) AddURL(ctx context.Context, formedURL *model.FormedURL) error {
 	query := `
 	INSERT INTO urls 
 	VALUES ($1, $2, $3)
@@ -60,7 +61,7 @@ func (dr *DBRepository) AddURL(ctx context.Context, formedURL *FormedURL) error 
 }
 
 // AddURLBatch writes batch of urls to DB.
-func (dr *DBRepository) AddURLBatch(ctx context.Context, formedURL []FormedURL) error {
+func (dr *DBRepository) AddURLBatch(ctx context.Context, formedURL []model.FormedURL) error {
 	tx, err := dr.db.Begin(ctx)
 	if err != nil {
 		return err
@@ -109,7 +110,7 @@ func (dr *DBRepository) PingDB(ctx context.Context) error {
 }
 
 // GetURLByUserID returns urls shortened by user from DB.
-func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]FormedURL, error) {
+func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]model.FormedURL, error) {
 
 	query := "SELECT shortened_url, long_url FROM urls WHERE uuid = $1"
 
@@ -119,9 +120,9 @@ func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]Form
 	}
 	defer rows.Close()
 
-	resultFormedURL := make([]FormedURL, 0)
+	resultFormedURL := make([]model.FormedURL, 0)
 	for rows.Next() {
-		var fu FormedURL
+		var fu model.FormedURL
 		scanErr := rows.Scan(&fu.ShortenedURL, &fu.LongURL)
 		if scanErr != nil {
 			if errors.Is(scanErr, pgx.ErrNoRows) {
@@ -139,7 +140,7 @@ func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]Form
 }
 
 // DeleteURLBatch deletes urls created by user.
-func (dr *DBRepository) DeleteURLBatch(ctx context.Context, formedURL []FormedURL) error {
+func (dr *DBRepository) DeleteURLBatch(ctx context.Context, formedURL []model.FormedURL) error {
 
 	query := `UPDATE urls SET deleted_flag = $1 WHERE uuid = $2 AND shortened_url = $3;`
 	deletedFlag := true

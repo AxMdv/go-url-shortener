@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/base64"
 
-	"github.com/AxMdv/go-url-shortener/internal/storage"
+	"github.com/AxMdv/go-url-shortener/internal/model"
 )
 
 // Request is a default request struct.
@@ -22,9 +22,9 @@ type RequestBatch struct {
 }
 
 // ToFormed transform RequestBatch to  slice of FormedURL.
-func (rb *RequestBatch) ToFormed(uuid string) []storage.FormedURL {
+func (rb *RequestBatch) ToFormed(uuid string) []model.FormedURL {
 	countReqBatch := len(rb.BatchList)
-	urlData := make([]storage.FormedURL, countReqBatch)
+	urlData := make([]model.FormedURL, countReqBatch)
 
 	for i, v := range rb.BatchList {
 		urlData[i].UUID = uuid

@@ -27,7 +27,16 @@ vendor/
 .env
 
 # urs inside json
-tmp/short-url-db.json
+tmp/
 
 # staticcheck config
 staticcheck.conf
+
+#tls certs
+certs/
+
+my notes.md
+
+*.html
+
+cmd/debug
