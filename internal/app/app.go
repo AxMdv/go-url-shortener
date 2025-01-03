@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -97,7 +96,6 @@ func (a *App) Run() error {
 		log.Print(err)
 	}
 	log.Println("shutting down...")
-	os.Exit(0)
 	return nil
 
 }
