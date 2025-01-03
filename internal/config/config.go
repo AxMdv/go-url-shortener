@@ -58,7 +58,7 @@ func ParseOptions() *Options {
 	if options.ConfigPath != "" {
 		confFile, err := os.ReadFile(options.ConfigPath)
 		if err != nil {
-			log.Panic(err)
+			log.Fatal(err)
 		}
 		err = json.Unmarshal(confFile, confOpts)
 		if err != nil {
