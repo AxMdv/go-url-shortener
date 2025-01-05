@@ -94,10 +94,10 @@ func (a *App) Run() error {
 		log.Println("successfully stopped http server")
 	}
 	fmt.Println("closed chan idleConnsClosed")
-	err := a.gracefullShutdown()
-	if err != nil {
-		log.Fatal("error: in grace shutdown:", err)
-	}
+	// err := a.gracefullShutdown()
+	// if err != nil {
+	// 	log.Fatal("error: in grace shutdown:", err)
+	// }
 	log.Println("shutting down...")
 	return nil
 
@@ -113,21 +113,21 @@ func (a *App) runHTTPServer() error {
 	return a.server.ListenAndServe()
 }
 
-func (a *App) gracefullShutdown() error {
-	// close repo if it has method close()
-	fmt.Println("trying to close repository..")
-	_, ok := a.urlRepository.(Closer)
-	var err error
-	if ok {
-		err = a.urlRepository.(Closer).Close()
-		if err != nil {
-			log.Println("error in closing repo", err)
-			return nil //hardcode
-		}
-		log.Println("success in closing repo")
-	} else {
-		log.Println("current repo doesn`t have method Close()")
-	}
+// func (a *App) gracefullShutdown() error {
+// 	// close repo if it has method close()
+// 	fmt.Println("trying to close repository..")
+// 	_, ok := a.urlRepository.(Closer)
+// 	var err error
+// 	if ok {
+// 		err = a.urlRepository.(Closer).Close()
+// 		if err != nil {
+// 			log.Println("error in closing repo", err)
+// 			return nil //hardcode
+// 		}
+// 		log.Println("success in closing repo")
+// 	} else {
+// 		log.Println("current repo doesn`t have method Close()")
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
