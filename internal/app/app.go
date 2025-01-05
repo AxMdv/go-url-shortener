@@ -72,27 +72,24 @@ func NewApp(config *config.Options) (*App, error) {
 // Run is a main process of working application
 func (a *App) Run() error {
 	fmt.Printf("%+v\n", a.configOptions)
-	idleConnsClosed := make(chan struct{})
+	go func() {
+		if err := a.runHTTPServer(); err != http.ErrServerClosed {
+			log.Fatal("error: in run server:", err)
+		}
+	}()
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	defer stop()
-	go func() {
-		fmt.Println("waiting for ctrl+c")
-		<-ctx.Done()
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		if err := a.server.Shutdown(shutdownCtx); err != nil {
-			// ошибки закрытия Listener
-			log.Printf("error in HTTP server Shutdown: %v\n", err)
+	fmt.Println("waiting for ctrl+c")
+	<-ctx.Done()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := a.server.Shutdown(shutdownCtx); err != nil {
+		// ошибки закрытия Listener
+		log.Printf("error in HTTP server Shutdown: %v\n", err)
 
-		} else {
-			log.Println("successfully stopped http server")
-		}
-		close(idleConnsClosed)
-	}()
-	if err := a.runHTTPServer(); err != http.ErrServerClosed {
-		log.Fatal("error: in run server:", err)
+	} else {
+		log.Println("successfully stopped http server")
 	}
-	<-idleConnsClosed
 	fmt.Println("closed chan idleConnsClosed")
 	err := a.gracefullShutdown()
 	if err != nil {
