@@ -90,13 +90,13 @@ func (a *App) Run() error {
 		close(idleConnsClosed)
 	}()
 	if err := a.runHTTPServer(); err != http.ErrServerClosed {
-		return err
+		log.Fatal("error: in run server:", err)
 	}
 	<-idleConnsClosed
 	fmt.Println("closed chan idleConnsClosed")
 	err := a.gracefullShutdown()
 	if err != nil {
-		log.Print(err)
+		log.Fatal("error: in grace shutdown:", err)
 	}
 	log.Println("shutting down...")
 	return nil
