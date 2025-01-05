@@ -18,7 +18,7 @@ func (s *ShortenerService) CreateShortURL(formedURL *model.FormedURL) error {
 
 // CreateShortURLBatch shortens batch of long urls.
 func (s *ShortenerService) CreateShortURLBatch(formedURL []model.FormedURL) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	err := s.urlRepository.AddURLBatch(ctx, formedURL)
 	return err
