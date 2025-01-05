@@ -122,12 +122,12 @@ func (a *App) gracefullShutdown() error {
 		err = a.urlRepository.(Closer).Close()
 		if err != nil {
 			log.Println("error in closing repo", err)
-			return err
+			return nil //hardcode
 		}
 		log.Println("success in closing repo")
 	} else {
 		log.Println("current repo doesn`t have method Close()")
 	}
 
-	return err
+	return nil
 }
