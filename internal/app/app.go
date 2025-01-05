@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -77,10 +78,12 @@ func (a *App) Run() error {
 			log.Fatal("error: in run server:", err)
 		}
 	}()
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
+	interruptChan := make(chan os.Signal, 2)
+	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	fmt.Println("waiting for ctrl+c")
-	<-ctx.Done()
+	c := <-interruptChan
+	fmt.Println("recieved signal: ", c)
+
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := a.server.Shutdown(shutdownCtx); err != nil {
