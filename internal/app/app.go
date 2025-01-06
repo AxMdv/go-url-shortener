@@ -116,19 +116,22 @@ func (a *App) runHTTPServer() error {
 func (a *App) gracefullShutdown() error {
 	fmt.Println("trying to close repository..")
 
-	repo, ok := a.urlRepository.(service.RepoCloser)
-	fmt.Printf("%+v\n", repo)
-	var err error
-	if ok {
-		err = repo.Close()
-		if err != nil {
-			log.Println("error in closing repo", err)
-			return nil //hardcode
-		}
+	if _, isRepoCloser := a.urlRepository.(service.RepoCloser); isRepoCloser {
+		a.urlRepository.(service.RepoCloser).Close()
 		log.Println("success in closing repo")
-	} else {
-		log.Println("current repo doesn`t have method Close()")
+		return nil
 	}
-
+	// var err error
+	// if ok {
+	// 	err = repo.Close()
+	// 	if err != nil {
+	// 		log.Println("error in closing repo", err)
+	// 		return nil //hardcode
+	// 	}
+	// 	log.Println("success in closing repo")
+	// } else {
+	// 	log.Println("current repo doesn`t have method Close()")
+	// }
+	log.Println("current repo doesn`t have method Close()")
 	return nil
 }
