@@ -74,15 +74,20 @@ func NewApp(config *config.Options) (*App, error) {
 func (a *App) Run() error {
 	fmt.Printf("%+v\n", a.configOptions)
 	if _, isRepoCloser := a.urlRepository.(service.RepoCloser); isRepoCloser {
-		defer a.urlRepository.(service.RepoCloser).Close()
+		defer func() {
+			err := a.urlRepository.(service.RepoCloser).Close()
+			if err != nil {
+				fmt.Println("err in closing:", err.Error())
+			}
+		}()
 	}
 	go func() {
 		if err := a.runHTTPServer(); err != http.ErrServerClosed {
 			log.Fatal("error: in run server:", err)
 		}
 	}()
-	interruptChan := make(chan os.Signal, 2)
-	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	interruptChan := make(chan os.Signal, 1)
+	signal.Notify(interruptChan, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	fmt.Println("waiting for ctrl+c")
 	c := <-interruptChan
 	fmt.Println("recieved signal: ", c)
@@ -124,17 +129,17 @@ func (a *App) runHTTPServer() error {
 // 		log.Println("success in closing repo")
 // 		return nil
 // 	}
-// 	// var err error
-// 	// if ok {
-// 	// 	err = repo.Close()
-// 	// 	if err != nil {
-// 	// 		log.Println("error in closing repo", err)
-// 	// 		return nil //hardcode
-// 	// 	}
-// 	// 	log.Println("success in closing repo")
-// 	// } else {
-// 	// 	log.Println("current repo doesn`t have method Close()")
-// 	// }
+// 	var err error
+// 	if ok {
+// 		err = repo.Close()
+// 		if err != nil {
+// 			log.Println("error in closing repo", err)
+// 			return nil //hardcode
+// 		}
+// 		log.Println("success in closing repo")
+// 	} else {
+// 		log.Println("current repo doesn`t have method Close()")
+// 	}
 // 	log.Println("current repo doesn`t have method Close()")
 // 	return nil
 // }

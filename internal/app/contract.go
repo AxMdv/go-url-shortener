@@ -1,6 +1,8 @@
 package app
 
-// Closer is contract of closing repository
-type Closer interface {
-	Close() error
+import "context"
+
+// RepoCloser is contract of closing repository
+type RepoCloser interface {
+	Close(context.Context) error
 }
