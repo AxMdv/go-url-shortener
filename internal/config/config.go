@@ -6,6 +6,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"runtime"
 )
 
 // Options is parameters of running applications.
@@ -80,7 +81,9 @@ func ParseOptions() *Options {
 			options.EnableHTTPS = confOpts.EnableHTTPS
 		}
 	}
-
+	if options.FileStorage != "" && runtime.GOOS == "windows" {
+		options.FileStorage = `.` + options.FileStorage
+	}
 	return &options
 }
 
