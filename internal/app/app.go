@@ -72,15 +72,6 @@ func NewApp(config *config.Options) (*App, error) {
 
 // Run is a main process of working application
 func (a *App) Run() error {
-	fmt.Printf("%+v\n", a.configOptions)
-	if _, isRepoCloser := a.urlRepository.(service.RepoCloser); isRepoCloser {
-		defer func() {
-			err := a.urlRepository.(service.RepoCloser).Close()
-			if err != nil {
-				fmt.Println("err in closing:", err.Error())
-			}
-		}()
-	}
 	go func() {
 		if err := a.runHTTPServer(); err != http.ErrServerClosed {
 			log.Fatal("error: in run server:", err)
@@ -101,14 +92,8 @@ func (a *App) Run() error {
 	} else {
 		log.Println("successfully stopped http server")
 	}
-	fmt.Println("closed chan idleConnsClosed")
-	// err := a.gracefullShutdown()
-	// if err != nil {
-	// 	log.Fatal("error: in grace shutdown:", err)
-	// }
 	log.Println("shutting down...")
 	return nil
-
 }
 
 func (a *App) runHTTPServer() error {
@@ -120,26 +105,3 @@ func (a *App) runHTTPServer() error {
 	log.Printf("HTTP server is running on %s", a.configOptions.RunAddr)
 	return a.server.ListenAndServe()
 }
-
-// func (a *App) gracefullShutdown() error {
-// 	fmt.Println("trying to close repository..")
-
-// 	if _, isRepoCloser := a.urlRepository.(service.RepoCloser); isRepoCloser {
-// 		a.urlRepository.(service.RepoCloser).Close()
-// 		log.Println("success in closing repo")
-// 		return nil
-// 	}
-// 	var err error
-// 	if ok {
-// 		err = repo.Close()
-// 		if err != nil {
-// 			log.Println("error in closing repo", err)
-// 			return nil //hardcode
-// 		}
-// 		log.Println("success in closing repo")
-// 	} else {
-// 		log.Println("current repo doesn`t have method Close()")
-// 	}
-// 	log.Println("current repo doesn`t have method Close()")
-// 	return nil
-// }
