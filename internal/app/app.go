@@ -74,7 +74,7 @@ func NewApp(config *config.Options) (*App, error) {
 func (a *App) Run() error {
 	fmt.Printf("%+v\n", a.configOptions)
 	if _, isRepoCloser := a.urlRepository.(service.RepoCloser); isRepoCloser {
-		defer a.gracefullShutdown()
+		defer a.urlRepository.(service.RepoCloser).Close()
 	}
 	go func() {
 		if err := a.runHTTPServer(); err != http.ErrServerClosed {
@@ -116,25 +116,25 @@ func (a *App) runHTTPServer() error {
 	return a.server.ListenAndServe()
 }
 
-func (a *App) gracefullShutdown() error {
-	fmt.Println("trying to close repository..")
+// func (a *App) gracefullShutdown() error {
+// 	fmt.Println("trying to close repository..")
 
-	if _, isRepoCloser := a.urlRepository.(service.RepoCloser); isRepoCloser {
-		a.urlRepository.(service.RepoCloser).Close()
-		log.Println("success in closing repo")
-		return nil
-	}
-	// var err error
-	// if ok {
-	// 	err = repo.Close()
-	// 	if err != nil {
-	// 		log.Println("error in closing repo", err)
-	// 		return nil //hardcode
-	// 	}
-	// 	log.Println("success in closing repo")
-	// } else {
-	// 	log.Println("current repo doesn`t have method Close()")
-	// }
-	log.Println("current repo doesn`t have method Close()")
-	return nil
-}
+// 	if _, isRepoCloser := a.urlRepository.(service.RepoCloser); isRepoCloser {
+// 		a.urlRepository.(service.RepoCloser).Close()
+// 		log.Println("success in closing repo")
+// 		return nil
+// 	}
+// 	// var err error
+// 	// if ok {
+// 	// 	err = repo.Close()
+// 	// 	if err != nil {
+// 	// 		log.Println("error in closing repo", err)
+// 	// 		return nil //hardcode
+// 	// 	}
+// 	// 	log.Println("success in closing repo")
+// 	// } else {
+// 	// 	log.Println("current repo doesn`t have method Close()")
+// 	// }
+// 	log.Println("current repo doesn`t have method Close()")
+// 	return nil
+// }
