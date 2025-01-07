@@ -73,6 +73,9 @@ func NewApp(config *config.Options) (*App, error) {
 // Run is a main process of working application
 func (a *App) Run() error {
 	fmt.Printf("%+v\n", a.configOptions)
+	if _, isRepoCloser := a.urlRepository.(service.RepoCloser); isRepoCloser {
+		defer a.gracefullShutdown()
+	}
 	go func() {
 		if err := a.runHTTPServer(); err != http.ErrServerClosed {
 			log.Fatal("error: in run server:", err)
@@ -94,10 +97,10 @@ func (a *App) Run() error {
 		log.Println("successfully stopped http server")
 	}
 	fmt.Println("closed chan idleConnsClosed")
-	err := a.gracefullShutdown()
-	if err != nil {
-		log.Fatal("error: in grace shutdown:", err)
-	}
+	// err := a.gracefullShutdown()
+	// if err != nil {
+	// 	log.Fatal("error: in grace shutdown:", err)
+	// }
 	log.Println("shutting down...")
 	return nil
 
