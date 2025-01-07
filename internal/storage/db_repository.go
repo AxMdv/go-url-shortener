@@ -99,10 +99,8 @@ func (dr *DBRepository) GetURL(ctx context.Context, shortenedURL string) (string
 
 // Close closes connection to DB.
 func (dr *DBRepository) Close() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Microsecond)
-	defer cancel()
 	dr.db.Close()
-	return ctx.Err()
+	return nil
 }
 
 // PingDB pings DB.
