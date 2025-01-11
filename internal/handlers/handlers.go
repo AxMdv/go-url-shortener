@@ -263,6 +263,9 @@ func (s *ShortenerHandlers) DeleteURLBatch(w http.ResponseWriter, r *http.Reques
 	}
 	deleteBatch.UUID = uuid
 
-	s.shortenerService.DeleteURLBatch(deleteBatch)
+	if err = s.shortenerService.DeleteURLBatch(deleteBatch); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusAccepted)
 }
