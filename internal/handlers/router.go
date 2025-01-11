@@ -18,6 +18,7 @@ func NewShortenerRouter(s *ShortenerHandlers) *chi.Mux {
 	r.Post("/api/shorten/batch", mw.WithLogging(mw.SignUpMiddleware(mw.GzipMiddleware(s.CreateShortURLBatch))))
 	r.Get("/api/user/urls", mw.WithLogging(mw.ValidateUserMiddleware(mw.GzipMiddleware((s.GetAllURLByID)))))
 	r.Delete("/api/user/urls", mw.WithLogging(mw.ValidateUserMiddleware(mw.GzipMiddleware(s.DeleteURLBatch))))
+	r.Get("/api/internal/stats", s.GetInternalStats)
 	r.HandleFunc("/debug/pprof/", pprof.Index)
 	r.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 	r.HandleFunc("/debug/pprof/profile", pprof.Profile)

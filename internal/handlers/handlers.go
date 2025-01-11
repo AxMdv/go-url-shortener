@@ -266,3 +266,21 @@ func (s *ShortenerHandlers) DeleteURLBatch(w http.ResponseWriter, r *http.Reques
 	s.shortenerService.DeleteURLBatch(deleteBatch)
 	w.WriteHeader(http.StatusAccepted)
 }
+
+// GetInternalStats sends url stats if the connection is trusted.
+func (s *ShortenerHandlers) GetInternalStats(w http.ResponseWriter, r *http.Request) {
+	// clientRealIP := r.Header.Get("X-Real-IP")
+	// if realIP == "" {
+	// 	w.WriteHeader(http.StatusForbidden)
+	// 	return
+	// }
+
+	// it can be proxy server IP
+	_ = r.RemoteAddr
+	// so check
+	clientRealIP := r.Header.Get("X-Real-IP")
+	if clientRealIP == "" {
+		requestIP = clientRealIP
+	}
+
+}

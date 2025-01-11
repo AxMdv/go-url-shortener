@@ -53,4 +53,9 @@ type BatchShortened struct {
 	ShortenedURL  string `json:"short_url"`
 }
 
+// TODO:
+type StatsResponse struct {
+	Urls int `json:"urls"`
+}
+
 // ........................................................
