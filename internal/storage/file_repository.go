@@ -116,7 +116,7 @@ func (fr *FileRepository) GetURLByUserID(_ context.Context, uuid string) ([]mode
 }
 
 // DeleteURLBatch deletes urls created by user.
-func (fr *FileRepository) DeleteURLBatch(ctx context.Context, formedURL []model.FormedURL) error {
+func (fr *FileRepository) DeleteURLBatch(_ context.Context, formedURL []model.FormedURL) error {
 	for _, v := range formedURL {
 
 		sliceShortened := fr.MapUUID[v.UUID]

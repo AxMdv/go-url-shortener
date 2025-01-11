@@ -32,7 +32,7 @@ func (s *ShortenerService) DeleteURLBatch(deleteBatch model.DeleteBatch) error {
 	// а теперь объединяем десять каналов в один
 	formResultCh := fanIn(doneCh, channels...)
 
-	var formedToDelete []model.FormedURL
+	formedToDelete := make([]model.FormedURL, 0, len(formResultCh))
 	for form := range formResultCh {
 		formedToDelete = append(formedToDelete, form)
 	}
