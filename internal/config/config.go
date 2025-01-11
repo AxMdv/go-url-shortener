@@ -63,7 +63,7 @@ func ParseOptions() *Options {
 		}
 		err = json.Unmarshal(confFile, confOpts)
 		if err != nil {
-			log.Panic(err)
+			log.Fatal(err)
 		}
 		if options.RunAddr == "" {
 			options.RunAddr = confOpts.RunAddr

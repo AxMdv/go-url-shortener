@@ -55,7 +55,8 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 			w.Write([]byte(res))
 			return
 		}
-		log.Panic("Cant save urls to storage ", err)
+		log.Println("Cant save urls to storage ", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -132,7 +133,8 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 			return
 
 		}
-		log.Panic("Cant save urls to storage", err)
+		log.Println("Cant save urls to storage", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -167,7 +169,7 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -178,7 +180,7 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 	var requestBatch RequestBatch
 	err = json.Unmarshal(bodyBytes, &requestBatch.BatchList)
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -187,7 +189,7 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 
 	err = s.shortenerService.CreateShortURLBatch(formedURL)
 	if err != nil {
-		log.Panic("can`t add url batch to storage", err)
+		log.Println("can`t add url batch to storage", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -199,7 +201,7 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 	}
 	resp, err := json.Marshal(respData)
 	if err != nil {
-		log.Panic("can`t marshal response batch", err)
+		log.Println("can`t marshal response batch", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -226,7 +228,7 @@ func (s *ShortenerHandlers) GetAllURLByID(w http.ResponseWriter, r *http.Request
 	}
 	resp, err := json.Marshal(formedURL)
 	if err != nil {
-		log.Panic("can`t marshal user urls", err)
+		log.Println("can`t marshal user urls", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
