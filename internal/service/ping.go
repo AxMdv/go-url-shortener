@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"time"
-
-	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
 // PingDatabase pings database.
-func (s *shortenerService) PingDatabase() error {
-	value, ok := s.urlRepository.(storage.Pinger)
+func (s *ShortenerService) PingDatabase() error {
+	value, ok := s.urlRepository.(Pinger)
 
 	if !ok {
 		return fmt.Errorf("current repo is not database repo")

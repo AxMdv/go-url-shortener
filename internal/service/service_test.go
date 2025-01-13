@@ -1,9 +1,11 @@
-package service
+package service_test
 
 import (
 	"testing"
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
+	"github.com/AxMdv/go-url-shortener/internal/model"
+	"github.com/AxMdv/go-url-shortener/internal/service"
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +20,7 @@ func TestNewShortenerService(t *testing.T) {
 	}
 	repository, err := storage.NewRepository(config)
 	require.NoError(t, err)
-	_ = NewShortenerService(repository)
+	_ = service.NewShortenerService(repository)
 }
 
 func TestServiceCreateShortURL(t *testing.T) {
@@ -30,19 +32,19 @@ func TestServiceCreateShortURL(t *testing.T) {
 	}
 	repository, err := storage.NewRepository(config)
 	require.NoError(t, err)
-	shortenerService := NewShortenerService(repository)
+	shortenerService := service.NewShortenerService(repository)
 
 	type want struct {
 		err error
 	}
 	tests := []struct {
 		name      string
-		formedURL *storage.FormedURL
+		formedURL *model.FormedURL
 		want      want
 	}{
 		{
 			name: "Positive test #1",
-			formedURL: &storage.FormedURL{
+			formedURL: &model.FormedURL{
 				LongURL:      "https://vk.com",
 				ShortenedURL: "http://localhost:8080/aHR0cHM6Ly92ay5jb20",
 			},
@@ -66,19 +68,19 @@ func TestServiceCreateShortURLBatch(t *testing.T) {
 	}
 	repository, err := storage.NewRepository(config)
 	require.NoError(t, err)
-	shortenerService := NewShortenerService(repository)
+	shortenerService := service.NewShortenerService(repository)
 
 	type want struct {
 		err error
 	}
 	tests := []struct {
 		name      string
-		formedURL []storage.FormedURL
+		formedURL []model.FormedURL
 		want      want
 	}{
 		{
 			name: "Positive test #1",
-			formedURL: []storage.FormedURL{
+			formedURL: []model.FormedURL{
 				{
 					LongURL:      "https://vk.com",
 					ShortenedURL: "http://localhost:8080/aHR0cHM6Ly92ay5jb20",
@@ -100,7 +102,7 @@ func TestServiceCreateShortURLBatch(t *testing.T) {
 }
 
 func TestServiceShortenLongURL(t *testing.T) {
-	service := shortenerService{}
+	service := service.ShortenerService{}
 	type want struct {
 		shortURL string
 	}
@@ -140,19 +142,19 @@ func TestServiceDeleteURLBatch(t *testing.T) {
 	}
 	repository, err := storage.NewRepository(config)
 	require.NoError(t, err)
-	shortenerService := NewShortenerService(repository)
+	shortenerService := service.NewShortenerService(repository)
 
 	type want struct {
 		err error
 	}
 	tests := []struct {
 		name        string
-		deleteBatch storage.DeleteBatch
+		deleteBatch model.DeleteBatch
 		want        want
 	}{
 		{
 			name: "Positive test #1",
-			deleteBatch: storage.DeleteBatch{
+			deleteBatch: model.DeleteBatch{
 				ShortenedURL: []string{"aHR0cHM6Ly92ay5jb20", "aHR0cHM6Ly95YW5kZXgucnU"},
 				UUID:         "asd",
 			},
@@ -176,7 +178,7 @@ func TestServiceGetLongURL(t *testing.T) {
 	}
 	repository, err := storage.NewRepository(config)
 	require.NoError(t, err)
-	shortenerService := NewShortenerService(repository)
+	shortenerService := service.NewShortenerService(repository)
 
 	type want struct {
 		longURL string
@@ -184,12 +186,12 @@ func TestServiceGetLongURL(t *testing.T) {
 	}
 	tests := []struct {
 		name      string
-		formedURL *storage.FormedURL
+		formedURL *model.FormedURL
 		want      want
 	}{
 		{
 			name: "Positive test #1",
-			formedURL: &storage.FormedURL{
+			formedURL: &model.FormedURL{
 				LongURL:      "https://vk.com",
 				ShortenedURL: "aHR0cHM6Ly92ay5jb20",
 			},
@@ -217,21 +219,21 @@ func TestServiceGetAllURLByID(t *testing.T) {
 	}
 	repository, err := storage.NewRepository(config)
 	require.NoError(t, err)
-	shortenerService := NewShortenerService(repository)
+	shortenerService := service.NewShortenerService(repository)
 
 	type want struct {
-		formedURL []storage.FormedURL
+		formedURL []model.FormedURL
 		err       error
 	}
 	tests := []struct {
 		name      string
-		formedURL []storage.FormedURL
+		formedURL []model.FormedURL
 		uuid      string
 		want      want
 	}{
 		{
 			name: "Positive test #1",
-			formedURL: []storage.FormedURL{
+			formedURL: []model.FormedURL{
 				{
 					LongURL:      "https://vk.com",
 					ShortenedURL: "aHR0cHM6Ly92ay5jb20",
@@ -240,7 +242,7 @@ func TestServiceGetAllURLByID(t *testing.T) {
 			},
 			uuid: "asd",
 			want: want{
-				formedURL: []storage.FormedURL{
+				formedURL: []model.FormedURL{
 					{
 						LongURL:      "https://vk.com",
 						ShortenedURL: "aHR0cHM6Ly92ay5jb20",
@@ -272,7 +274,7 @@ func TestServiceGetFlagByShortURL(t *testing.T) {
 	}
 	repository, err := storage.NewRepository(config)
 	require.NoError(t, err)
-	shortenerService := NewShortenerService(repository)
+	shortenerService := service.NewShortenerService(repository)
 
 	type want struct {
 		isDeleted bool
@@ -280,13 +282,13 @@ func TestServiceGetFlagByShortURL(t *testing.T) {
 	}
 	tests := []struct {
 		name      string
-		formedURL storage.FormedURL
+		formedURL model.FormedURL
 		uuid      string
 		want      want
 	}{
 		{
 			name: "Positive test #1",
-			formedURL: storage.FormedURL{
+			formedURL: model.FormedURL{
 				LongURL:      "https://vk.com",
 				ShortenedURL: "aHR0cHM6Ly92ay5jb20",
 				UUID:         "asd",
@@ -303,7 +305,7 @@ func TestServiceGetFlagByShortURL(t *testing.T) {
 		err := shortenerService.CreateShortURL(&tt.formedURL)
 		require.NoError(t, err)
 		// delete url
-		err = shortenerService.DeleteURLBatch(storage.DeleteBatch{UUID: tt.uuid, ShortenedURL: []string{tt.formedURL.ShortenedURL}})
+		err = shortenerService.DeleteURLBatch(model.DeleteBatch{UUID: tt.uuid, ShortenedURL: []string{tt.formedURL.ShortenedURL}})
 		require.NoError(t, err)
 
 		formedURL, err := shortenerService.GetFlagByShortURL(tt.formedURL.ShortenedURL)

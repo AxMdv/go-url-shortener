@@ -2,8 +2,14 @@
 package app
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -16,15 +22,17 @@ import (
 
 // App is an application of url shortener
 type App struct {
-	urlService service.ShortenerService
+	urlService handlers.IShortenerService
 
-	urlRepository storage.Repository
+	urlRepository service.IRepository
 
 	configOptions *config.Options
 	// ShortenerHandlers is api handlers
 	ShortenerHandlers *handlers.ShortenerHandlers
 
 	router *chi.Mux
+
+	server *http.Server
 }
 
 // NewApp creates a new app of a URL shortener
@@ -46,26 +54,54 @@ func NewApp(config *config.Options) (*App, error) {
 
 	router := handlers.NewShortenerRouter(shortenerHandlers)
 
+	srv := &http.Server{
+		Addr:    config.RunAddr,
+		Handler: router,
+	}
+
 	a := &App{
 		urlService:        urlService,
 		urlRepository:     repository,
 		configOptions:     config,
 		ShortenerHandlers: shortenerHandlers,
 		router:            router,
+		server:            srv,
 	}
 	return a, nil
 }
 
 // Run is a main process of working application
 func (a *App) Run() error {
-	return a.runHTTPServer()
+	go func() {
+		if err := a.runHTTPServer(); err != http.ErrServerClosed {
+			log.Fatal("error: in run server:", err)
+		}
+	}()
+	interruptChan := make(chan os.Signal, 1)
+	signal.Notify(interruptChan, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	fmt.Println("waiting for ctrl+c")
+	c := <-interruptChan
+	fmt.Println("recieved signal: ", c)
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := a.server.Shutdown(shutdownCtx); err != nil {
+		// ошибки закрытия Listener
+		log.Printf("error in HTTP server Shutdown: %v\n", err)
+
+	} else {
+		log.Println("successfully stopped http server")
+	}
+	log.Println("shutting down...")
+	return nil
 }
 
 func (a *App) runHTTPServer() error {
+
 	if a.configOptions.EnableHTTPS {
 		log.Printf("HTTPS server is running on %s", a.configOptions.RunAddr)
-		return http.ListenAndServeTLS(a.configOptions.RunAddr, "./certs/certbundle.pem", "./certs/server.key", a.router)
+		return a.server.ListenAndServeTLS("./certs/certbundle.pem", "./certs/server.key")
 	}
 	log.Printf("HTTP server is running on %s", a.configOptions.RunAddr)
-	return http.ListenAndServe(a.configOptions.RunAddr, a.router)
+	return a.server.ListenAndServe()
 }

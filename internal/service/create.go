@@ -5,11 +5,11 @@ import (
 	"encoding/base64"
 	"time"
 
-	"github.com/AxMdv/go-url-shortener/internal/storage"
+	"github.com/AxMdv/go-url-shortener/internal/model"
 )
 
 // CreateShortURL shortens long url.
-func (s *shortenerService) CreateShortURL(formedURL *storage.FormedURL) error {
+func (s *ShortenerService) CreateShortURL(formedURL *model.FormedURL) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	err := s.urlRepository.AddURL(ctx, formedURL)
@@ -17,15 +17,15 @@ func (s *shortenerService) CreateShortURL(formedURL *storage.FormedURL) error {
 }
 
 // CreateShortURLBatch shortens batch of long urls.
-func (s *shortenerService) CreateShortURLBatch(formedURL []storage.FormedURL) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+func (s *ShortenerService) CreateShortURLBatch(formedURL []model.FormedURL) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	err := s.urlRepository.AddURLBatch(ctx, formedURL)
 	return err
 }
 
 // ShortenLongURL transform long url to short url.
-func (s *shortenerService) ShortenLongURL(longURL []byte) string {
+func (s *ShortenerService) ShortenLongURL(longURL []byte) string {
 	shortenedURL := base64.RawStdEncoding.EncodeToString(longURL)
 	return shortenedURL
 }

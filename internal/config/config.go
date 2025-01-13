@@ -6,6 +6,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"runtime"
 )
 
 // Options is parameters of running applications.
@@ -58,11 +59,11 @@ func ParseOptions() *Options {
 	if options.ConfigPath != "" {
 		confFile, err := os.ReadFile(options.ConfigPath)
 		if err != nil {
-			log.Panic(err)
+			log.Fatal(err)
 		}
 		err = json.Unmarshal(confFile, confOpts)
 		if err != nil {
-			log.Panic(err)
+			log.Fatal(err)
 		}
 		if options.RunAddr == "" {
 			options.RunAddr = confOpts.RunAddr
@@ -80,8 +81,18 @@ func ParseOptions() *Options {
 			options.EnableHTTPS = confOpts.EnableHTTPS
 		}
 	}
-
+	if options.FileStorage != "" && runtime.GOOS == "windows" {
+		options.FileStorage = `.` + options.FileStorage
+	}
 	return &options
 }
 
 // dsn := "user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable"
+// -database-dsn='postgresql://postgres:adm@127.0.0.1:5432/postgres?sslmode=disable'
+// -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
+// set FILE_STORAGE_PATH=''
+// shortenertestbeta -test.v -test.run=^TestIteration1$ -binary-path=cmd/shortener/shortener
+//-database-dsn='postgresql://postgres:adm@127.0.0.1:5432/postgres?sslmode=disable'
+
+// shortenertest -test.v -test.run=^TestIteration11$ -binary-path=cmd/shortener/shortener -database-dsn='postgresql://postgres:adm@127.0.0.1:5432/postgres?sslmode=disable'
+// shortenertest -test.v -test.run=^TestIteration11$ -binary-path=cmd/shortener/shortener -file-storage-path="./tmp/short-url-db.json" -server-port="8080" -source-path="." -database-dsn="user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable"

@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
+	"github.com/AxMdv/go-url-shortener/internal/model"
 	"github.com/AxMdv/go-url-shortener/internal/service"
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
@@ -51,6 +52,16 @@ func TestCreateShortURL(t *testing.T) {
 				statusCode:  201,
 			},
 		},
+		{
+			name:       "Positive test #2",
+			requestURL: "/",
+			reqBody:    "https://yandex.ru",
+			want: want{
+				contentType: "text/plain",
+				respBody:    "http://localhost:8080/aHR0cHM6Ly95YW5kZXgucnU",
+				statusCode:  http.StatusConflict,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -73,6 +84,35 @@ func TestCreateShortURL(t *testing.T) {
 		})
 	}
 }
+func TestShortenerHandlersAuthMiddleware(t *testing.T) {
+	config := &config.Options{
+		RunAddr:            ":8080",
+		ResponseResultAddr: "http://localhost:8080",
+		FileStorage:        "",
+		DataBaseDSN:        "",
+	}
+	repository, err := storage.NewRepository(config)
+	require.NoError(t, err)
+	urlService := service.NewShortenerService(repository)
+	shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+	router := NewShortenerRouter(shortenerHandlers)
+	require.NoError(t, err)
+	t.Run("invalid cookie", func(t *testing.T) {
+		server := httptest.NewServer(router)
+		request, err := http.NewRequest(http.MethodGet, server.URL+`/aHR0cHM6Ly95YW5kZXgucnU`, nil)
+		require.NoError(t, err)
+		cookie := &http.Cookie{
+			Name:  "user_id",
+			Value: "32d36a9af35b2f189228001d67f322295417f17ff534a88b99",
+		}
+		request.AddCookie(cookie)
+		resp, err := http.DefaultClient.Do(request)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, 400, resp.StatusCode)
+	})
+}
 
 func TestShortenerHandlersGetLongURL(t *testing.T) {
 	config := &config.Options{
@@ -89,7 +129,7 @@ func TestShortenerHandlersGetLongURL(t *testing.T) {
 	router := NewShortenerRouter(shortenerHandlers)
 	require.NoError(t, err)
 
-	formedURL := storage.FormedURL{
+	formedURL := model.FormedURL{
 		LongURL:      "https://yandex.ru",
 		ShortenedURL: "aHR0cHM6Ly95YW5kZXgucnU",
 		UUID:         "asd",
@@ -175,6 +215,17 @@ func TestShortenerHandlersCreateShortURLJson(t *testing.T) {
 				statusCode:  201,
 			},
 		},
+		{
+			name:           "Positive test #2",
+			requestURL:     "/api/shorten",
+			reqBody:        `{"url": "https://yandex.ru"} `,
+			reqContentType: "application/json",
+			want: want{
+				contentType: "application/json",
+				respBody:    `{"result":"http://localhost:8080/aHR0cHM6Ly95YW5kZXgucnU"}`,
+				statusCode:  http.StatusConflict,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -199,47 +250,26 @@ func TestShortenerHandlersCreateShortURLJson(t *testing.T) {
 }
 
 func TestShortenerHandlersCheckDatabaseConnection(t *testing.T) {
+	t.Run("Negative test #1", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        "",
+		}
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
 
-	type want struct {
-		statusCode int
-	}
-	tests := []struct {
-		name        string
-		requestURL  string
-		databaseDSN string
-		want        want
-	}{
-		{
-			name:        "Negative test #1",
-			requestURL:  "http://localhost:8080/ping",
-			databaseDSN: "",
-			want: want{
-				statusCode: 405,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			config := &config.Options{
-				RunAddr:            ":8080",
-				ResponseResultAddr: "http://localhost:8080",
-				FileStorage:        "",
-				DataBaseDSN:        "",
-			}
-			repository, err := storage.NewRepository(config)
-			require.NoError(t, err)
-			urlService := service.NewShortenerService(repository)
-			shortenerHandlers := NewShortenerHandlers(urlService, config)
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/ping", nil)
+		w := httptest.NewRecorder()
+		shortenerHandlers.CheckDatabaseConnection(w, request)
+		result := w.Result()
+		defer result.Body.Close()
 
-			request := httptest.NewRequest(http.MethodGet, tt.requestURL, nil)
-			w := httptest.NewRecorder()
-			shortenerHandlers.CheckDatabaseConnection(w, request)
-			result := w.Result()
-			defer result.Body.Close()
-
-			assert.Equal(t, tt.want.statusCode, result.StatusCode)
-		})
-	}
+		assert.Equal(t, 405, result.StatusCode)
+	})
 }
 
 func TestShortenerHandlersCreateShortURLBatch(t *testing.T) {
@@ -354,21 +384,23 @@ func TestShortenerHandlersGetAllURLByID(t *testing.T) {
 	require.NoError(t, err)
 
 	type want struct {
-		responseBatch []storage.FormedURL
+		responseBatch []model.FormedURL
 		statusCode    int
 	}
 	tests := []struct {
 		name       string
 		requestURL string
 		addURLs    []string
+		cookieVal  string
 		want       want
 	}{
 		{
 			name:       "Positive test #1",
 			requestURL: "http://localhost:8080/api/user/urls",
 			addURLs:    []string{"https://yandex.ru", "https://vk.com"},
+			cookieVal:  "30316566613236612d656333362d366533362d383031362d303031353564623832353563f8c1885334e5c310884a9af35b2f189228001d67f322295417f17ff534a88b99",
 			want: want{
-				responseBatch: []storage.FormedURL{
+				responseBatch: []model.FormedURL{
 					{
 						LongURL:      "https://vk.com",
 						ShortenedURL: "http://localhost:8080/aHR0cHM6Ly92ay5jb20",
@@ -388,19 +420,22 @@ func TestShortenerHandlersGetAllURLByID(t *testing.T) {
 			server := httptest.NewServer(router)
 			defer server.Close()
 			// first add some urls by user with cookie user_id
-			cookie := &http.Cookie{Name: "user_id", Value: "30316566613236612d656333362d366533362d383031362d303031353564623832353563f8c1885334e5c310884a9af35b2f189228001d67f322295417f17ff534a88b99"}
-			for _, addURL := range tt.addURLs {
-				body := bytes.NewBuffer([]byte(addURL))
-				req, err := http.NewRequest(http.MethodPost, server.URL, body)
-				require.NoError(t, err)
-				req.AddCookie(cookie)
-				req.Header.Set("Content-Type", "text/html")
-				resp, err := http.DefaultClient.Do(req)
-				require.NoError(t, err)
-				resp.Body.Close()
-				fmt.Printf("%+v", req)
-				require.Equal(t, 201, resp.StatusCode)
+			cookie := &http.Cookie{Name: "user_id", Value: tt.cookieVal}
+			if tt.addURLs != nil {
+				for _, addURL := range tt.addURLs {
+					body := bytes.NewBuffer([]byte(addURL))
+					req, err := http.NewRequest(http.MethodPost, server.URL, body)
+					require.NoError(t, err)
+					req.AddCookie(cookie)
+					req.Header.Set("Content-Type", "text/html")
+					resp, err := http.DefaultClient.Do(req)
+					require.NoError(t, err)
+					resp.Body.Close()
+					fmt.Printf("%+v", req)
+					require.Equal(t, 201, resp.StatusCode)
+				}
 			}
+
 			request, err := http.NewRequest(http.MethodGet, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), nil)
 			request.AddCookie(cookie)
 			require.NoError(t, err)
@@ -411,7 +446,7 @@ func TestShortenerHandlersGetAllURLByID(t *testing.T) {
 			respBody, err := io.ReadAll(resp.Body)
 			require.NoError(t, err)
 			defer resp.Body.Close()
-			responseBatch := make([]storage.FormedURL, len(tt.want.responseBatch))
+			responseBatch := make([]model.FormedURL, len(tt.want.responseBatch))
 			err = json.Unmarshal(respBody, &responseBatch)
 			require.NoError(t, err)
 

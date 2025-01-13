@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/AxMdv/go-url-shortener/internal/storage"
+	"github.com/AxMdv/go-url-shortener/internal/model"
 )
 
 // GetLongURL returns long url if it was shortened earlier.
-func (s *shortenerService) GetLongURL(shortenedURL string) (string, error) {
+func (s *ShortenerService) GetLongURL(shortenedURL string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	longURL, err := s.urlRepository.GetURL(ctx, shortenedURL)
@@ -19,7 +19,7 @@ func (s *shortenerService) GetLongURL(shortenedURL string) (string, error) {
 }
 
 // GetAllURLByID returns all urls shortened by user.
-func (s *shortenerService) GetAllURLByID(uuid string) ([]storage.FormedURL, error) {
+func (s *ShortenerService) GetAllURLByID(uuid string) ([]model.FormedURL, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -32,7 +32,7 @@ func (s *shortenerService) GetAllURLByID(uuid string) ([]storage.FormedURL, erro
 }
 
 // GetFlagByShortURL returns if short url was deleted.
-func (s *shortenerService) GetFlagByShortURL(shortURL string) (bool, error) {
+func (s *ShortenerService) GetFlagByShortURL(shortURL string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	isDeleted, err := s.urlRepository.GetFlagByShortURL(ctx, shortURL)

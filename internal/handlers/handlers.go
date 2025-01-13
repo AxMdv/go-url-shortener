@@ -11,7 +11,7 @@ import (
 	"errors"
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
-	"github.com/AxMdv/go-url-shortener/internal/service"
+	"github.com/AxMdv/go-url-shortener/internal/model"
 	"github.com/AxMdv/go-url-shortener/pkg/auth"
 
 	"github.com/go-chi/chi/v5"
@@ -21,12 +21,12 @@ import (
 
 // ShortenerHandlers is api handlers.
 type ShortenerHandlers struct {
-	shortenerService service.ShortenerService
+	shortenerService IShortenerService
 	Config           config.Options
 }
 
 // NewShortenerHandlers returns  new ShortenerHandlers with given deps.
-func NewShortenerHandlers(shortenerService service.ShortenerService, config *config.Options) *ShortenerHandlers {
+func NewShortenerHandlers(shortenerService IShortenerService, config *config.Options) *ShortenerHandlers {
 	return &ShortenerHandlers{shortenerService: shortenerService, Config: *config}
 }
 
@@ -40,7 +40,7 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 	}
 	shortenedURL := s.shortenerService.ShortenLongURL(longURL)
 
-	formedURL := &storage.FormedURL{
+	formedURL := &model.FormedURL{
 		UUID:         auth.GetUUIDFromContext(r.Context()),
 		ShortenedURL: shortenedURL,
 		LongURL:      string(longURL),
@@ -55,7 +55,8 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 			w.Write([]byte(res))
 			return
 		}
-		log.Panic("Cant save urls to storage ", err)
+		log.Println("Cant save urls to storage ", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -108,7 +109,7 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 	}
 
 	shortenedURL := s.shortenerService.ShortenLongURL([]byte(request.URL))
-	formedURL := &storage.FormedURL{
+	formedURL := &model.FormedURL{
 		UUID:         auth.GetUUIDFromContext(r.Context()),
 		ShortenedURL: shortenedURL,
 		LongURL:      request.URL,
@@ -132,7 +133,8 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 			return
 
 		}
-		log.Panic("Cant save urls to storage", err)
+		log.Println("Cant save urls to storage", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -167,7 +169,7 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -178,7 +180,7 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 	var requestBatch RequestBatch
 	err = json.Unmarshal(bodyBytes, &requestBatch.BatchList)
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -187,7 +189,7 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 
 	err = s.shortenerService.CreateShortURLBatch(formedURL)
 	if err != nil {
-		log.Panic("can`t add url batch to storage", err)
+		log.Println("can`t add url batch to storage", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -199,7 +201,7 @@ func (s *ShortenerHandlers) CreateShortURLBatch(w http.ResponseWriter, r *http.R
 	}
 	resp, err := json.Marshal(respData)
 	if err != nil {
-		log.Panic("can`t marshal response batch", err)
+		log.Println("can`t marshal response batch", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -226,7 +228,7 @@ func (s *ShortenerHandlers) GetAllURLByID(w http.ResponseWriter, r *http.Request
 	}
 	resp, err := json.Marshal(formedURL)
 	if err != nil {
-		log.Panic("can`t marshal user urls", err)
+		log.Println("can`t marshal user urls", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -247,7 +249,7 @@ func (s *ShortenerHandlers) DeleteURLBatch(w http.ResponseWriter, r *http.Reques
 
 	uuid := auth.GetUUIDFromContext(r.Context())
 
-	var deleteBatch storage.DeleteBatch
+	var deleteBatch model.DeleteBatch
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -263,6 +265,9 @@ func (s *ShortenerHandlers) DeleteURLBatch(w http.ResponseWriter, r *http.Reques
 	}
 	deleteBatch.UUID = uuid
 
-	s.shortenerService.DeleteURLBatch(deleteBatch)
+	if err = s.shortenerService.DeleteURLBatch(deleteBatch); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusAccepted)
 }
