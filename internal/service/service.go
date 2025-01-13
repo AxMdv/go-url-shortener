@@ -13,6 +13,6 @@ type ShortenerService interface {
 	CreateShortURLBatch([]storage.FormedURL) error
 	PingDatabase() error
 	GetAllURLByID(string) ([]storage.FormedURL, error)
-	DeleteURLBatch(storage.DeleteBatch)
+	DeleteURLBatch(storage.DeleteBatch) error
 	GetFlagByShortURL(shortURL string) (isDeleted bool, err error)
 }

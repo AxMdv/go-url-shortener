@@ -62,6 +62,10 @@ func (a *App) Run() error {
 }
 
 func (a *App) runHTTPServer() error {
+	if a.configOptions.EnableHTTPS {
+		log.Printf("HTTPS server is running on %s", a.configOptions.RunAddr)
+		return http.ListenAndServeTLS(a.configOptions.RunAddr, "./certs/certbundle.pem", "./certs/server.key", a.router)
+	}
 	log.Printf("HTTP server is running on %s", a.configOptions.RunAddr)
 	return http.ListenAndServe(a.configOptions.RunAddr, a.router)
 }
