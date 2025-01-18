@@ -15,3 +15,9 @@ type DeleteBatch struct {
 	ShortenedURL []string
 	UUID         string
 }
+
+// URLUserStats is number of shortened urls and number of service users
+type URLUserStats struct {
+	Urls  int `json:"urls"`
+	Users int `json:"users"`
+}

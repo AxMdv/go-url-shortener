@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"flag"
 	"log"
+	"net"
 	"os"
 	"runtime"
+	"strconv"
 )
 
 // Options is parameters of running applications.
@@ -22,7 +24,7 @@ type Options struct {
 	DataBaseDSN string `json:"database_dsn"`
 	// Enable HTTPS
 	EnableHTTPS bool `json:"enable_https"`
-	// CIDR
+	// CIDR of trusted subnet
 	TrustedSubnet string `json:"trusted_subnet"`
 }
 
@@ -52,8 +54,12 @@ func ParseOptions() *Options {
 	if envDataBaseDSN := os.Getenv("DATABASE_DSN"); envDataBaseDSN != "" {
 		options.DataBaseDSN = envDataBaseDSN
 	}
-	if envDataBaseDSN := os.Getenv("ENABLE_HTTPS"); envDataBaseDSN != "" {
-		options.DataBaseDSN = envDataBaseDSN
+	if envEnableHTTPS := os.Getenv("ENABLE_HTTPS"); envEnableHTTPS != "" {
+		httpsEnable, err := strconv.ParseBool(envEnableHTTPS)
+		if err != nil {
+			log.Fatal(err)
+		}
+		options.EnableHTTPS = httpsEnable
 	}
 	if envConfigPath := os.Getenv("CONFIG"); envConfigPath != "" {
 		options.ConfigPath = envConfigPath
@@ -69,7 +75,7 @@ func ParseOptions() *Options {
 		}
 		err = json.Unmarshal(confFile, confOpts)
 		if err != nil {
-			log.Panic(err)
+			log.Fatal(err)
 		}
 		if options.RunAddr == "" {
 			options.RunAddr = confOpts.RunAddr
@@ -87,6 +93,14 @@ func ParseOptions() *Options {
 			options.EnableHTTPS = confOpts.EnableHTTPS
 		}
 	}
+	// check that TrustedSunbet is correct:
+	if options.TrustedSubnet != "" {
+		_, _, err := net.ParseCIDR(options.TrustedSubnet)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	// adding dot in filepath on windows
 	if options.FileStorage != "" && runtime.GOOS == "windows" {
 		options.FileStorage = `.` + options.FileStorage

@@ -180,6 +180,19 @@ func (dr *DBRepository) GetFlagByShortURL(ctx context.Context, shortenedURL stri
 	return deleted, nil
 }
 
+// GetNumberOfURLAndUser returns number of shortened urls and number of users.
+func (dr *DBRepository) GetNumberOfURLAndUser(ctx context.Context) (model.URLUserStats, error) {
+	stats := model.URLUserStats{}
+	query := `
+	SELECT COUNT(shortened_url), COUNT(uuid) from urls;
+	`
+	row := dr.db.QueryRow(ctx, query)
+
+	err := row.Scan(&stats)
+
+	return stats, err
+}
+
 func (dr *DBRepository) createDB(ctx context.Context) error {
 	query := `
 		CREATE TABLE IF NOT EXISTS urls (

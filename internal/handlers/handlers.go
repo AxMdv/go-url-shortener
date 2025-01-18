@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 
 	"errors"
@@ -274,13 +275,39 @@ func (s *ShortenerHandlers) GetInternalStats(w http.ResponseWriter, r *http.Requ
 	// 	w.WriteHeader(http.StatusForbidden)
 	// 	return
 	// }
-
-	// it can be proxy server IP
-	_ = r.RemoteAddr
-	// so check
-	clientRealIP := r.Header.Get("X-Real-IP")
-	if clientRealIP == "" {
-		requestIP = clientRealIP
+	if s.Config.TrustedSubnet == "" {
+		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 
+	ip, err := getIPfromRequest(r)
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	_, ipNet, err := net.ParseCIDR(s.Config.TrustedSubnet)
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	trustedRequest := ipNet.Contains(ip)
+	if !trustedRequest {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	statsResponse, err := s.shortenerService.GetURLUserStats()
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	resp, err := json.Marshal(statsResponse)
+	if err != nil {
+		log.Panic("can`t marshal stats response", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
 }
