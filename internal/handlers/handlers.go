@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 
 	"errors"
@@ -270,36 +269,7 @@ func (s *ShortenerHandlers) DeleteURLBatch(w http.ResponseWriter, r *http.Reques
 
 // GetInternalStats sends url stats if the connection is trusted.
 func (s *ShortenerHandlers) GetInternalStats(w http.ResponseWriter, r *http.Request) {
-	// clientRealIP := r.Header.Get("X-Real-IP")
-	// if realIP == "" {
-	// 	w.WriteHeader(http.StatusForbidden)
-	// 	return
-	// }
-	if s.Config.TrustedSubnet == "" {
-		log.Println("s.Config.TrustedSubnet == empty")
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
 
-	ip, err := getIPfromRequest(r)
-	if err != nil {
-		log.Println("getIPfromRequest(r)", err)
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
-	_, ipNet, err := net.ParseCIDR(s.Config.TrustedSubnet)
-	if err != nil {
-		log.Println("fail to parse cidr", err)
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
-	fmt.Printf("ipnet: %v, ip: %v\n", ipNet, ip.To16().String())
-	trustedRequest := ipNet.Contains(ip)
-	if !trustedRequest {
-		log.Println("untrusted trustedRequest")
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
 	statsResponse, err := s.shortenerService.GetURLUserStats()
 	if err != nil {
 		log.Println("err GetURLUserStats", err)
