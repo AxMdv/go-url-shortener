@@ -14,4 +14,5 @@ type IRepository interface {
 	GetURLByUserID(context.Context, string) ([]model.FormedURL, error)
 	DeleteURLBatch(ctx context.Context, formedURL []model.FormedURL) error
 	GetFlagByShortURL(context.Context, string) (bool, error)
+	GetNumberOfURLAndUser(context.Context) (model.URLUserStats, error)
 }

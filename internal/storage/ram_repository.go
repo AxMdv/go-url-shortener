@@ -84,6 +84,13 @@ func (rr *RAMRepository) GetFlagByShortURL(_ context.Context, shortenedURL strin
 	return rr.MapDeleted[shortenedURL], nil
 }
 
+// GetNumberOfURLAndUser returns number of shortened urls and number of users.
+func (rr *RAMRepository) GetNumberOfURLAndUser(_ context.Context) (model.URLUserStats, error) {
+	urslNum := len(rr.MapURL)
+	usersNum := len(rr.MapUUID)
+	return model.URLUserStats{Urls: urslNum, Users: usersNum}, nil
+}
+
 func contains(target []string, value string) bool {
 	for _, v := range target {
 		if v == value {

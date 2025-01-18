@@ -39,3 +39,10 @@ func (s *ShortenerService) GetFlagByShortURL(shortURL string) (bool, error) {
 
 	return isDeleted, err
 }
+
+// GetURLUserStats returns number of shortened urls and number of users.
+func (s *ShortenerService) GetURLUserStats() (model.URLUserStats, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return s.urlRepository.GetNumberOfURLAndUser(ctx)
+}

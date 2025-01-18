@@ -271,3 +271,23 @@ func (s *ShortenerHandlers) DeleteURLBatch(w http.ResponseWriter, r *http.Reques
 	}
 	w.WriteHeader(http.StatusAccepted)
 }
+
+// GetInternalStats sends url stats if the connection is trusted.
+func (s *ShortenerHandlers) GetInternalStats(w http.ResponseWriter, r *http.Request) {
+
+	statsResponse, err := s.shortenerService.GetURLUserStats()
+	if err != nil {
+		log.Println("err GetURLUserStats", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	resp, err := json.Marshal(statsResponse)
+	if err != nil {
+		log.Println("can`t marshal stats response", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+}

@@ -3,7 +3,9 @@
 package middleware
 
 import (
+	"fmt"
 	"log"
+	"net"
 	"net/http"
 
 	"github.com/AxMdv/go-url-shortener/pkg/auth"
@@ -77,5 +79,37 @@ func ValidateUserMiddleware(h http.HandlerFunc) http.HandlerFunc {
 		id := auth.GetIDFromCookie(cookie.Value)
 		cr := auth.SetUUIDToRequestContext(r, id)
 		h.ServeHTTP(w, cr)
+	}
+}
+
+// TrustedSubnet checks request IP for being in trusted subnet.
+func TrustedSubnet(h http.HandlerFunc, subnet string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if subnet == "" {
+			log.Println("s.Config.TrustedSubnet == empty")
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		ip, err := auth.GetIPfromRequest(r)
+		if err != nil {
+			log.Println("getIPfromRequest(r)", err)
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		_, ipNet, err := net.ParseCIDR(subnet)
+		if err != nil {
+			log.Println("fail to parse cidr", err)
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		fmt.Printf("ipnet: %v, ip: %v\n", ipNet, ip.To16().String())
+		trustedRequest := ipNet.Contains(ip)
+		if !trustedRequest {
+			log.Println("untrusted trustedRequest")
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		h.ServeHTTP(w, r)
 	}
 }
