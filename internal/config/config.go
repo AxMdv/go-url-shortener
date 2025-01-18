@@ -92,6 +92,9 @@ func ParseOptions() *Options {
 		if !options.EnableHTTPS {
 			options.EnableHTTPS = confOpts.EnableHTTPS
 		}
+		if options.TrustedSubnet == "" {
+			options.TrustedSubnet = confOpts.TrustedSubnet
+		}
 	}
 	// check that TrustedSunbet is correct:
 	if options.TrustedSubnet != "" {

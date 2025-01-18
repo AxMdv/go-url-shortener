@@ -276,34 +276,39 @@ func (s *ShortenerHandlers) GetInternalStats(w http.ResponseWriter, r *http.Requ
 	// 	return
 	// }
 	if s.Config.TrustedSubnet == "" {
+		log.Println("s.Config.TrustedSubnet == empty")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
 	ip, err := getIPfromRequest(r)
 	if err != nil {
+		log.Println("getIPfromRequest(r)", err)
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 	_, ipNet, err := net.ParseCIDR(s.Config.TrustedSubnet)
 	if err != nil {
+		log.Println("fail to parse cidr", err)
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
+	fmt.Printf("ipnet: %v, ip: %v\n", ipNet, ip.To16().String())
 	trustedRequest := ipNet.Contains(ip)
 	if !trustedRequest {
+		log.Println("untrusted trustedRequest")
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 	statsResponse, err := s.shortenerService.GetURLUserStats()
 	if err != nil {
-		log.Println(err)
+		log.Println("err GetURLUserStats", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	resp, err := json.Marshal(statsResponse)
 	if err != nil {
-		log.Panic("can`t marshal stats response", err)
+		log.Println("can`t marshal stats response", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
