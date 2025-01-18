@@ -122,6 +122,7 @@ func concatIDAndSignature(byteID []byte, sign []byte) (resultStr string) {
 	return resultStr
 }
 
+// GetIPfromRequest returns IP of request, also using headers "X-Real-IP", "X-Forwarded-For".
 func GetIPfromRequest(r *http.Request) (net.IP, error) {
 	// first try to get IPs from headers made by proxy server:
 	ipStr := r.Header.Get("X-Real-IP")

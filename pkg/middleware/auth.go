@@ -82,6 +82,7 @@ func ValidateUserMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// TrustedSubnet checks request IP for being in trusted subnet.
 func TrustedSubnet(h http.HandlerFunc, subnet string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if subnet == "" {
