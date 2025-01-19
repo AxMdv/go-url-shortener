@@ -93,6 +93,54 @@ func TestValidateUserMiddleware(t *testing.T) {
 	})
 }
 
+func TestTrustedSubnetMiddleware(t *testing.T) {
+
+	t.Run("untrusted X-Real-IP", func(t *testing.T) {
+		handler := TrustedSubnet(testCall, "::1")
+		srv := httptest.NewServer(handler)
+		defer srv.Close()
+
+		request, err := http.NewRequest(http.MethodGet, srv.URL, nil)
+		require.NoError(t, err)
+		request.Header.Set("X-Real-IP", "2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+		resp, err := http.DefaultClient.Do(request)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+	})
+	t.Run("fail in trustd subnet", func(t *testing.T) {
+		handler := TrustedSubnet(testCall, "::1")
+		srv := httptest.NewServer(handler)
+		defer srv.Close()
+
+		request, err := http.NewRequest(http.MethodGet, srv.URL, nil)
+		require.NoError(t, err)
+		request.Header.Set("X-Real-IP", "::1")
+		resp, err := http.DefaultClient.Do(request)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	})
+	t.Run("ipnet doesn`t contain req addr", func(t *testing.T) {
+		handler := TrustedSubnet(testCall, "::1")
+		srv := httptest.NewServer(handler)
+		defer srv.Close()
+
+		request, err := http.NewRequest(http.MethodGet, srv.URL, nil)
+		require.NoError(t, err)
+
+		request.Header.Set("X-Forwarded-For", "2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+
+		resp, err := http.DefaultClient.Do(request)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	})
+}
+
 func testCall(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }

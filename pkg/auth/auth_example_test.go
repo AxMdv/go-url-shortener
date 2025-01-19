@@ -48,3 +48,23 @@ func ExampleGetIDFromCookie() {
 	// Output:
 	// ID is 01ef7e94-4a03-6631-aac1-126fd900d4a1
 }
+
+func ExampleGetIPfromRequest() {
+	r, _ := http.NewRequest(http.MethodGet, "http://yandex.ru", nil)
+
+	ip, _ := auth.GetIPfromRequest(r)
+	fmt.Printf("IP is %s\n", ip)
+
+	r.Header.Set("X-Real-IP", "::1")
+	ip, _ = auth.GetIPfromRequest(r)
+	fmt.Printf("IP is %s\n", ip)
+
+	r.Header.Set("X-Forwarded-For", "::1")
+	ip, _ = auth.GetIPfromRequest(r)
+	fmt.Printf("IP is %s\n", ip)
+
+	// Output:
+	// IP is <nil>
+	// IP is ::1
+	// IP is ::1
+}

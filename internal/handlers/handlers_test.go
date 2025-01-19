@@ -515,3 +515,27 @@ func TestShortenerHandlersDeleteURLBatch(t *testing.T) {
 		})
 	}
 }
+
+func TestShortenerHandlersGetInternalStats(t *testing.T) {
+	t.Run("Positive test #1", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        "",
+			TrustedSubnet:      "::1/128",
+		}
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080//api/internal/stats", nil)
+		w := httptest.NewRecorder()
+		shortenerHandlers.GetInternalStats(w, request)
+		result := w.Result()
+		defer result.Body.Close()
+
+		assert.Equal(t, 200, result.StatusCode)
+	})
+}
