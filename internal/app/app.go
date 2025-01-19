@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"google.golang.org/grpc"
 
 	"github.com/AxMdv/go-url-shortener/internal/config"
 	"github.com/AxMdv/go-url-shortener/internal/handlers"
@@ -33,6 +35,8 @@ type App struct {
 	router *chi.Mux
 
 	server *http.Server
+
+	grpcServer *grpc.Server
 }
 
 // NewApp creates a new app of a URL shortener
@@ -58,7 +62,11 @@ func NewApp(config *config.Options) (*App, error) {
 		Addr:    config.RunAddr,
 		Handler: router,
 	}
+	// grpc inits:
 
+	grpcServiceAPI := handlers.NewGRPCShortenerServer(urlService, *config)
+	grpcSrv := handlers.NewGRPCServer()
+	handlers.RegisterShortenerServer(grpcSrv, grpcServiceAPI)
 	a := &App{
 		urlService:        urlService,
 		urlRepository:     repository,
@@ -66,6 +74,7 @@ func NewApp(config *config.Options) (*App, error) {
 		ShortenerHandlers: shortenerHandlers,
 		router:            router,
 		server:            srv,
+		grpcServer:        grpcSrv,
 	}
 	return a, nil
 }
@@ -77,6 +86,14 @@ func (a *App) Run() error {
 			log.Fatal("error: in run server:", err)
 		}
 	}()
+	if a.configOptions.GRPCRunAddr != "" {
+		go func() {
+			if err := a.runGRPCServer(); err != grpc.ErrServerStopped {
+				log.Fatal("error: in run server:", err)
+			}
+		}()
+	}
+
 	interruptChan := make(chan os.Signal, 1)
 	signal.Notify(interruptChan, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	fmt.Println("waiting for ctrl+c")
@@ -92,6 +109,10 @@ func (a *App) Run() error {
 	} else {
 		log.Println("successfully stopped http server")
 	}
+	if a.configOptions.GRPCRunAddr != "" {
+		a.grpcServer.GracefulStop()
+	}
+
 	log.Println("shutting down...")
 	return nil
 }
@@ -104,4 +125,17 @@ func (a *App) runHTTPServer() error {
 	}
 	log.Printf("HTTP server is running on %s", a.configOptions.RunAddr)
 	return a.server.ListenAndServe()
+}
+
+func (a *App) runGRPCServer() error {
+	listen, err := net.Listen("tcp", a.configOptions.GRPCRunAddr)
+	if err != nil {
+		log.Fatalf("Failed to listen TCP %s: %s ", a.configOptions.GRPCRunAddr, err)
+	}
+	fmt.Println("Сервер gRPC начал работу")
+	// получаем запрос gRPC
+	if err := a.grpcServer.Serve(listen); err != nil {
+		log.Fatalf("Failed to run GRPC server %s: %s", a.configOptions.GRPCRunAddr, err)
+	}
+	return err
 }

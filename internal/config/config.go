@@ -26,6 +26,8 @@ type Options struct {
 	EnableHTTPS bool `json:"enable_https"`
 	// CIDR of trusted subnet
 	TrustedSubnet string `json:"trusted_subnet"`
+	//
+	GRPCRunAddr string `json:"grpc_server_address"`
 }
 
 // ParseOptions parses cmd flags and os environment variables.
