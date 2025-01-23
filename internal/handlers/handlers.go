@@ -56,6 +56,8 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		log.Println("Cant save urls to storage ", err)
+
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -133,6 +135,9 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 
 		}
 		log.Println("Cant save urls to storage", err)
+
+		w.WriteHeader(http.StatusInternalServerError)
+
 		return
 	}
 
@@ -263,7 +268,10 @@ func (s *ShortenerHandlers) DeleteURLBatch(w http.ResponseWriter, r *http.Reques
 	}
 	deleteBatch.UUID = uuid
 
-	s.shortenerService.DeleteURLBatch(deleteBatch)
+	if err = s.shortenerService.DeleteURLBatch(deleteBatch); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusAccepted)
 }
 

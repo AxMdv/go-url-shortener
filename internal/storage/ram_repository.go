@@ -45,7 +45,7 @@ func (rr *RAMRepository) GetURL(_ context.Context, shortenedURL string) (string,
 // GetURLByUserID returns urls shortened by user from RAMRepository.
 func (rr *RAMRepository) GetURLByUserID(_ context.Context, uuid string) ([]model.FormedURL, error) {
 	shortenedURL := rr.MapUUID[uuid]
-	formedURL := make([]model.FormedURL, 0)
+	formedURL := make([]model.FormedURL, 0, len(shortenedURL))
 	for _, v := range shortenedURL {
 		longURL, err := rr.GetURL(context.Background(), v)
 		if err != nil {
