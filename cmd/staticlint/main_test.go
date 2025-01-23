@@ -1,15 +1,15 @@
 package main
 
-// import (
-// 	"os"
-// 	"testing"
-// )
+import (
+	"os"
+	"testing"
+)
 
-// func TestMain(m *testing.M) {
-// 	_ = getStandarStaticAnalyzers()
-// 	_ = getStaticcheckAnalyzers()
-// 	_ = getQuickfixAnalyzers()
-// 	_ = getCommunityAnalyzers()
+func TestMain(m *testing.M) {
+	_ = getStandarStaticAnalyzers()
+	_ = getStaticcheckAnalyzers()
+	_ = getQuickfixAnalyzers()
+	_ = getCommunityAnalyzers()
 
-// 	os.Exit(m.Run())
-// }
+	os.Exit(m.Run())
+}

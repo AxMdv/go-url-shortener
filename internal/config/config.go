@@ -39,8 +39,8 @@ func ParseOptions() *Options {
 	flag.StringVar(&options.FileStorage, "f", "/tmp/short-url-db.json", "path to save shortened URLs")
 	flag.StringVar(&options.DataBaseDSN, "d", "", "dsn for acees to DB")
 	flag.BoolVar(&options.EnableHTTPS, "s", false, "enable https")
-	flag.StringVar(&options.ConfigPath, "c", "", "path to config file")
-	flag.StringVar(&options.ConfigPath, "config", "", "path to config file")
+	flag.StringVar(&options.ConfigPath, "c", "config.json", "path to config file")
+	flag.StringVar(&options.ConfigPath, "config", "config.json", "path to config file")
 	flag.StringVar(&options.TrustedSubnet, "t", "", "subnet to access to /api/internal/stats")
 	flag.Parse()
 

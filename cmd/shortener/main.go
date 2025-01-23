@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/AxMdv/go-url-shortener/internal/app"
 	"github.com/AxMdv/go-url-shortener/internal/config"
@@ -33,7 +34,7 @@ func formatValue(buildData string) string {
 func main() {
 
 	printBuildInfo()
-
+	fmt.Println(os.Environ())
 	cfg := config.ParseOptions()
 	a, err := app.NewApp(cfg)
 	if err != nil {
