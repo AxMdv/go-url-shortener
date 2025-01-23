@@ -19,71 +19,144 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
-func TestCreateShortURL(t *testing.T) {
-	config := &config.Options{
-		RunAddr:            ":8080",
-		ResponseResultAddr: "http://localhost:8080",
-		FileStorage:        "",
-		DataBaseDSN:        "",
-	}
-	repository, err := storage.NewRepository(config)
-	require.NoError(t, err)
-	urlService := service.NewShortenerService(repository)
-	shortenerHandlers := NewShortenerHandlers(urlService, config)
-
-	type want struct {
-		contentType string
-		respBody    string
-		statusCode  int
-	}
-	tests := []struct {
-		name       string
-		requestURL string
-		reqBody    string
-		want       want
-	}{
-		{
-			name:       "Positive test #1",
-			requestURL: "/",
-			reqBody:    "https://yandex.ru",
-			want: want{
-				contentType: "text/plain",
-				respBody:    "http://localhost:8080/aHR0cHM6Ly95YW5kZXgucnU",
-				statusCode:  201,
-			},
-		},
-		{
-			name:       "Positive test #2",
-			requestURL: "/",
-			reqBody:    "https://yandex.ru",
-			want: want{
-				contentType: "text/plain",
-				respBody:    "http://localhost:8080/aHR0cHM6Ly95YW5kZXgucnU",
-				statusCode:  http.StatusConflict,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-			reqBody := bytes.NewReader([]byte(tt.reqBody))
-			request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
-			w := httptest.NewRecorder()
-			shortenerHandlers.CreateShortURL(w, request)
-			result := w.Result()
-
-			resultURL, err := io.ReadAll(result.Body)
-			require.NoError(t, err)
-			err = result.Body.Close()
-			require.NoError(t, err)
-			resultString := string(resultURL)
-
-			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
-			assert.Equal(t, tt.want.respBody, resultString)
-			assert.Equal(t, tt.want.statusCode, result.StatusCode)
-		})
-	}
+func SetDSNForTests() string {
+	return "user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable"
 }
+
+func TestCreateShortURL(t *testing.T) {
+	t.Run("in memory database", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        "",
+		}
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+		type want struct {
+			contentType string
+			respBody    string
+			statusCode  int
+		}
+		tests := []struct {
+			name       string
+			requestURL string
+			reqBody    string
+			want       want
+		}{
+			{
+				name:       "Positive test #1",
+				requestURL: "/",
+				reqBody:    "https://yandex.ru",
+				want: want{
+					contentType: "text/plain",
+					respBody:    "http://localhost:8080/aHR0cHM6Ly95YW5kZXgucnU",
+					statusCode:  201,
+				},
+			},
+			{
+				name:       "Positive test #2",
+				requestURL: "/",
+				reqBody:    "https://yandex.ru",
+				want: want{
+					contentType: "text/plain",
+					respBody:    "http://localhost:8080/aHR0cHM6Ly95YW5kZXgucnU",
+					statusCode:  http.StatusConflict,
+				},
+			},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+
+				reqBody := bytes.NewReader([]byte(tt.reqBody))
+				request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
+				w := httptest.NewRecorder()
+				shortenerHandlers.CreateShortURL(w, request)
+				result := w.Result()
+
+				resultURL, err := io.ReadAll(result.Body)
+				require.NoError(t, err)
+				err = result.Body.Close()
+				require.NoError(t, err)
+				resultString := string(resultURL)
+
+				assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
+				assert.Equal(t, tt.want.respBody, resultString)
+				assert.Equal(t, tt.want.statusCode, result.StatusCode)
+			})
+		}
+	})
+	t.Run("postgres db", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        SetDSNForTests(),
+		}
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+		type want struct {
+			contentType string
+			respBody    string
+			statusCode  int
+		}
+		tests := []struct {
+			name       string
+			requestURL string
+			reqBody    string
+			want       want
+		}{
+			{
+				name:       "Positive test #1",
+				requestURL: "/",
+				reqBody:    "https://yandex.ru",
+				want: want{
+					contentType: "text/plain",
+					respBody:    "http://localhost:8080/aHR0cHM6Ly95YW5kZXgucnU",
+					statusCode:  201,
+				},
+			},
+			{
+				name:       "Positive test #2",
+				requestURL: "/",
+				reqBody:    "https://yandex.ru",
+				want: want{
+					contentType: "text/plain",
+					respBody:    "http://localhost:8080/aHR0cHM6Ly95YW5kZXgucnU",
+					statusCode:  http.StatusConflict,
+				},
+			},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+
+				reqBody := bytes.NewReader([]byte(tt.reqBody))
+				request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
+				w := httptest.NewRecorder()
+				shortenerHandlers.CreateShortURL(w, request)
+				result := w.Result()
+
+				resultURL, err := io.ReadAll(result.Body)
+				require.NoError(t, err)
+				err = result.Body.Close()
+				require.NoError(t, err)
+				resultString := string(resultURL)
+
+				assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
+				assert.Equal(t, tt.want.respBody, resultString)
+				assert.Equal(t, tt.want.statusCode, result.StatusCode)
+			})
+		}
+
+	})
+}
+
 func TestShortenerHandlersAuthMiddleware(t *testing.T) {
 	config := &config.Options{
 		RunAddr:            ":8080",
