@@ -17,4 +17,9 @@ func NewRepository(config *config.Options) (service.IRepository, error) {
 	return NewRAMRepository()
 }
 
-// .............................................................
+//.............................................
+
+// SetDSNForTests sets dsn for postgres
+func SetDSNForTests() string {
+	return "user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable"
+}

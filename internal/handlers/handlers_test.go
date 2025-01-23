@@ -21,9 +21,8 @@ import (
 
 // SetDSNForTests sets dsn for postgres
 func SetDSNForTests() string {
-	return "user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable"
+	return storage.SetDSNForTests()
 }
-
 func TestCreateShortURL(t *testing.T) {
 	type want struct {
 		contentType string
@@ -97,6 +96,7 @@ func TestCreateShortURL(t *testing.T) {
 			FileStorage:        "",
 			DataBaseDSN:        SetDSNForTests(),
 		}
+
 		// drop table for tests:
 		db, err := storage.NewDBRepository(config)
 		require.NoError(t, err)

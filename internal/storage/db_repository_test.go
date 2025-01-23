@@ -12,16 +12,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// SetDSNForTests sets dsn for postgres
-func setDSNForTests() string {
-	return "user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable"
-}
 func TestNewDBRepository(t *testing.T) {
 	config := &config.Options{
 		RunAddr:            ":8080",
 		ResponseResultAddr: "http://localhost:8080",
 		FileStorage:        "",
-		DataBaseDSN:        setDSNForTests(),
+		DataBaseDSN:        SetDSNForTests(),
 	}
 	_, err := NewDBRepository(config)
 	require.NoError(t, err)
@@ -32,7 +28,7 @@ func TestAddURL(t *testing.T) {
 		RunAddr:            ":8080",
 		ResponseResultAddr: "http://localhost:8080",
 		FileStorage:        "",
-		DataBaseDSN:        setDSNForTests(),
+		DataBaseDSN:        SetDSNForTests(),
 	}
 
 	db, err := NewDBRepository(config)
@@ -71,7 +67,7 @@ func TestAddURLBatch(t *testing.T) {
 		RunAddr:            ":8080",
 		ResponseResultAddr: "http://localhost:8080",
 		FileStorage:        "",
-		DataBaseDSN:        setDSNForTests(),
+		DataBaseDSN:        SetDSNForTests(),
 	}
 
 	db, err := NewDBRepository(config)
@@ -89,7 +85,7 @@ func TestGetURL(t *testing.T) {
 		RunAddr:            ":8080",
 		ResponseResultAddr: "http://localhost:8080",
 		FileStorage:        "",
-		DataBaseDSN:        setDSNForTests(),
+		DataBaseDSN:        SetDSNForTests(),
 	}
 	db, err := NewDBRepository(config)
 	require.NoError(t, err)
@@ -119,7 +115,7 @@ func TestPingDB(t *testing.T) {
 		RunAddr:            ":8080",
 		ResponseResultAddr: "http://localhost:8080",
 		FileStorage:        "",
-		DataBaseDSN:        setDSNForTests(),
+		DataBaseDSN:        SetDSNForTests(),
 	}
 	db, err := NewDBRepository(config)
 	require.NoError(t, err)
@@ -132,7 +128,7 @@ func TestClose(t *testing.T) {
 		RunAddr:            ":8080",
 		ResponseResultAddr: "http://localhost:8080",
 		FileStorage:        "",
-		DataBaseDSN:        setDSNForTests(),
+		DataBaseDSN:        SetDSNForTests(),
 	}
 	db, err := NewDBRepository(config)
 	require.NoError(t, err)
@@ -145,7 +141,7 @@ func TestGetURLByUserID(t *testing.T) {
 		RunAddr:            ":8080",
 		ResponseResultAddr: "http://localhost:8080",
 		FileStorage:        "",
-		DataBaseDSN:        setDSNForTests(),
+		DataBaseDSN:        SetDSNForTests(),
 	}
 	db, err := NewDBRepository(config)
 	require.NoError(t, err)
@@ -179,7 +175,7 @@ func TestDeleteURLBatch_GetFlagByShortURL(t *testing.T) {
 		RunAddr:            ":8080",
 		ResponseResultAddr: "http://localhost:8080",
 		FileStorage:        "",
-		DataBaseDSN:        setDSNForTests(),
+		DataBaseDSN:        SetDSNForTests(),
 	}
 	db, err := NewDBRepository(config)
 	require.NoError(t, err)
@@ -214,7 +210,7 @@ func TestGetNumberOfURLAndUser(t *testing.T) {
 		RunAddr:            ":8080",
 		ResponseResultAddr: "http://localhost:8080",
 		FileStorage:        "",
-		DataBaseDSN:        setDSNForTests(),
+		DataBaseDSN:        SetDSNForTests(),
 	}
 	db, err := NewDBRepository(config)
 	require.NoError(t, err)

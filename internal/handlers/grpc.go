@@ -56,7 +56,7 @@ func (s *GRPCShortenerServer) CreateShortURL(ctx context.Context, in *pb.CreateS
 }
 
 // GetLongURL returns long url from shortened url
-func (s *GRPCShortenerServer) GetLongURL(ctx context.Context, in *pb.GetLongURLRequest) (*pb.GetLongURLResponse, error) {
+func (s *GRPCShortenerServer) GetLongURL(_ context.Context, in *pb.GetLongURLRequest) (*pb.GetLongURLResponse, error) {
 	var response pb.GetLongURLResponse
 
 	deleted, err := s.shortenerService.GetFlagByShortURL(in.ShortenedUrl)
