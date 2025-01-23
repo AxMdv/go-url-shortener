@@ -1,0 +1,9 @@
+{
+"server_address": "localhost:8080",
+"base_url": "http://localhost",
+"file_storage_path": "./tmp/short-url-db.json",
+"database_dsn": "123",
+"enable_https": false,
+"trusted_subnet": "::1/128",
+"grpc_server_address": ":8090"
+} 

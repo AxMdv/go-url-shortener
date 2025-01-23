@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"flag"
 	"log"
+	"net"
 	"os"
 	"runtime"
+	"strconv"
 )
 
 // Options is parameters of running applications.
@@ -22,6 +24,10 @@ type Options struct {
 	DataBaseDSN string `json:"database_dsn"`
 	// Enable HTTPS
 	EnableHTTPS bool `json:"enable_https"`
+	// CIDR of trusted subnet
+	TrustedSubnet string `json:"trusted_subnet"`
+	//
+	GRPCRunAddr string `json:"grpc_server_address"`
 }
 
 // ParseOptions parses cmd flags and os environment variables.
@@ -33,8 +39,9 @@ func ParseOptions() *Options {
 	flag.StringVar(&options.FileStorage, "f", "/tmp/short-url-db.json", "path to save shortened URLs")
 	flag.StringVar(&options.DataBaseDSN, "d", "", "dsn for acees to DB")
 	flag.BoolVar(&options.EnableHTTPS, "s", false, "enable https")
-	flag.StringVar(&options.ConfigPath, "c", "", "path to config file")
-	flag.StringVar(&options.ConfigPath, "config", "", "path to config file")
+	flag.StringVar(&options.ConfigPath, "c", "config.json", "path to config file")
+	flag.StringVar(&options.ConfigPath, "config", "config.json", "path to config file")
+	flag.StringVar(&options.TrustedSubnet, "t", "", "subnet to access to /api/internal/stats")
 	flag.Parse()
 
 	if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
@@ -49,11 +56,18 @@ func ParseOptions() *Options {
 	if envDataBaseDSN := os.Getenv("DATABASE_DSN"); envDataBaseDSN != "" {
 		options.DataBaseDSN = envDataBaseDSN
 	}
-	if envDataBaseDSN := os.Getenv("ENABLE_HTTPS"); envDataBaseDSN != "" {
-		options.DataBaseDSN = envDataBaseDSN
+	if envEnableHTTPS := os.Getenv("ENABLE_HTTPS"); envEnableHTTPS != "" {
+		httpsEnable, err := strconv.ParseBool(envEnableHTTPS)
+		if err != nil {
+			log.Fatal(err)
+		}
+		options.EnableHTTPS = httpsEnable
 	}
 	if envConfigPath := os.Getenv("CONFIG"); envConfigPath != "" {
 		options.ConfigPath = envConfigPath
+	}
+	if envTrustedSubnet := os.Getenv("TRUSTED_SUBNET"); envTrustedSubnet != "" {
+		options.TrustedSubnet = envTrustedSubnet
 	}
 	confOpts := &Options{}
 	if options.ConfigPath != "" {
@@ -80,7 +94,19 @@ func ParseOptions() *Options {
 		if !options.EnableHTTPS {
 			options.EnableHTTPS = confOpts.EnableHTTPS
 		}
+		if options.TrustedSubnet == "" {
+			options.TrustedSubnet = confOpts.TrustedSubnet
+		}
 	}
+	// check that TrustedSunbet is correct:
+	if options.TrustedSubnet != "" {
+		_, _, err := net.ParseCIDR(options.TrustedSubnet)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// adding dot in filepath on windows
 	if options.FileStorage != "" && runtime.GOOS == "windows" {
 		options.FileStorage = `.` + options.FileStorage
 	}
@@ -90,7 +116,6 @@ func ParseOptions() *Options {
 // dsn := "user=postgres password=adm dbname=postgres host=localhost port=5432 sslmode=disable"
 // -database-dsn='postgresql://postgres:adm@127.0.0.1:5432/postgres?sslmode=disable'
 // -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
-// set FILE_STORAGE_PATH=''
 // shortenertestbeta -test.v -test.run=^TestIteration1$ -binary-path=cmd/shortener/shortener
 //-database-dsn='postgresql://postgres:adm@127.0.0.1:5432/postgres?sslmode=disable'
 

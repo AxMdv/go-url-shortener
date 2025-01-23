@@ -19,18 +19,11 @@ import (
 	"github.com/AxMdv/go-url-shortener/internal/storage"
 )
 
+// SetDSNForTests sets dsn for postgres
+func SetDSNForTests() string {
+	return storage.SetDSNForTests()
+}
 func TestCreateShortURL(t *testing.T) {
-	config := &config.Options{
-		RunAddr:            ":8080",
-		ResponseResultAddr: "http://localhost:8080",
-		FileStorage:        "",
-		DataBaseDSN:        "",
-	}
-	repository, err := storage.NewRepository(config)
-	require.NoError(t, err)
-	urlService := service.NewShortenerService(repository)
-	shortenerHandlers := NewShortenerHandlers(urlService, config)
-
 	type want struct {
 		contentType string
 		respBody    string
@@ -63,27 +56,82 @@ func TestCreateShortURL(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	t.Run("in memory database", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        "",
+		}
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
 
-			reqBody := bytes.NewReader([]byte(tt.reqBody))
-			request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
-			w := httptest.NewRecorder()
-			shortenerHandlers.CreateShortURL(w, request)
-			result := w.Result()
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
 
-			resultURL, err := io.ReadAll(result.Body)
-			require.NoError(t, err)
-			err = result.Body.Close()
-			require.NoError(t, err)
-			resultString := string(resultURL)
+				reqBody := bytes.NewReader([]byte(tt.reqBody))
+				request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
+				w := httptest.NewRecorder()
+				shortenerHandlers.CreateShortURL(w, request)
+				result := w.Result()
 
-			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
-			assert.Equal(t, tt.want.respBody, resultString)
-			assert.Equal(t, tt.want.statusCode, result.StatusCode)
-		})
-	}
+				resultURL, err := io.ReadAll(result.Body)
+				require.NoError(t, err)
+				err = result.Body.Close()
+				require.NoError(t, err)
+				resultString := string(resultURL)
+
+				assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
+				assert.Equal(t, tt.want.respBody, resultString)
+				assert.Equal(t, tt.want.statusCode, result.StatusCode)
+			})
+		}
+	})
+	t.Run("postgres db", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        SetDSNForTests(),
+		}
+
+		// drop table for tests:
+		db, err := storage.NewDBRepository(config)
+		require.NoError(t, err)
+		err = db.DropTableURLS()
+		require.NoError(t, err)
+
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+
+				reqBody := bytes.NewReader([]byte(tt.reqBody))
+				request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
+				w := httptest.NewRecorder()
+				shortenerHandlers.CreateShortURL(w, request)
+				result := w.Result()
+
+				resultURL, err := io.ReadAll(result.Body)
+				require.NoError(t, err)
+				err = result.Body.Close()
+				require.NoError(t, err)
+				resultString := string(resultURL)
+
+				assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
+				assert.Equal(t, tt.want.respBody, resultString)
+				assert.Equal(t, tt.want.statusCode, result.StatusCode)
+			})
+		}
+
+	})
 }
+
 func TestShortenerHandlersAuthMiddleware(t *testing.T) {
 	config := &config.Options{
 		RunAddr:            ":8080",
@@ -115,27 +163,6 @@ func TestShortenerHandlersAuthMiddleware(t *testing.T) {
 }
 
 func TestShortenerHandlersGetLongURL(t *testing.T) {
-	config := &config.Options{
-		RunAddr:            ":8080",
-		ResponseResultAddr: "http://localhost:8080",
-		FileStorage:        "",
-		DataBaseDSN:        "",
-	}
-	repository, err := storage.NewRepository(config)
-	require.NoError(t, err)
-	urlService := service.NewShortenerService(repository)
-	shortenerHandlers := NewShortenerHandlers(urlService, config)
-
-	router := NewShortenerRouter(shortenerHandlers)
-	require.NoError(t, err)
-
-	formedURL := model.FormedURL{
-		LongURL:      "https://yandex.ru",
-		ShortenedURL: "aHR0cHM6Ly95YW5kZXgucnU",
-		UUID:         "asd",
-	}
-	err = shortenerHandlers.shortenerService.CreateShortURL(&formedURL)
-	require.NoError(t, err)
 	type want struct {
 		longURL    string
 		statusCode int
@@ -155,43 +182,110 @@ func TestShortenerHandlersGetLongURL(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(router)
-			defer server.Close()
+	t.Run("in memory db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        "",
+		}
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
 
-			request, err := http.NewRequest(http.MethodGet, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), nil)
-			require.NoError(t, err)
-			client := &http.Client{
-				CheckRedirect: func(req *http.Request, via []*http.Request) error {
-					return http.ErrUseLastResponse
-				},
-			}
-			resp, err := client.Do(request)
-			require.NoError(t, err)
-			defer resp.Body.Close()
-			longURL := resp.Header.Get("Location")
-			fmt.Println(longURL)
+		router := NewShortenerRouter(shortenerHandlers)
+		require.NoError(t, err)
 
-			assert.Equal(t, tt.want.longURL, longURL)
-			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
-		})
+		formedURL := model.FormedURL{
+			LongURL:      "https://yandex.ru",
+			ShortenedURL: "aHR0cHM6Ly95YW5kZXgucnU",
+			UUID:         "asd",
+		}
+		err = shortenerHandlers.shortenerService.CreateShortURL(&formedURL)
+		require.NoError(t, err)
 
-	}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				server := httptest.NewServer(router)
+				defer server.Close()
+
+				request, err := http.NewRequest(http.MethodGet, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), nil)
+				require.NoError(t, err)
+				client := &http.Client{
+					CheckRedirect: func(req *http.Request, via []*http.Request) error {
+						return http.ErrUseLastResponse
+					},
+				}
+				resp, err := client.Do(request)
+				require.NoError(t, err)
+				defer resp.Body.Close()
+				longURL := resp.Header.Get("Location")
+				fmt.Println(longURL)
+
+				assert.Equal(t, tt.want.longURL, longURL)
+				assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+			})
+
+		}
+	})
+	t.Run("postgres db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        SetDSNForTests(),
+		}
+		// drop table for tests:
+		db, err := storage.NewDBRepository(config)
+		require.NoError(t, err)
+		err = db.DropTableURLS()
+		require.NoError(t, err)
+
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+		router := NewShortenerRouter(shortenerHandlers)
+		require.NoError(t, err)
+
+		formedURL := model.FormedURL{
+			LongURL:      "https://yandex.ru",
+			ShortenedURL: "aHR0cHM6Ly95YW5kZXgucnU",
+			UUID:         "asd",
+		}
+		err = shortenerHandlers.shortenerService.CreateShortURL(&formedURL)
+		require.NoError(t, err)
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				server := httptest.NewServer(router)
+				defer server.Close()
+
+				request, err := http.NewRequest(http.MethodGet, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), nil)
+				require.NoError(t, err)
+				client := &http.Client{
+					CheckRedirect: func(req *http.Request, via []*http.Request) error {
+						return http.ErrUseLastResponse
+					},
+				}
+				resp, err := client.Do(request)
+				require.NoError(t, err)
+				defer resp.Body.Close()
+				longURL := resp.Header.Get("Location")
+				fmt.Println(longURL)
+
+				assert.Equal(t, tt.want.longURL, longURL)
+				assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+			})
+
+		}
+	})
+
 }
 
 func TestShortenerHandlersCreateShortURLJson(t *testing.T) {
-	config := &config.Options{
-		RunAddr:            ":8080",
-		ResponseResultAddr: "http://localhost:8080",
-		FileStorage:        "",
-		DataBaseDSN:        "",
-	}
-	repository, err := storage.NewRepository(config)
-	require.NoError(t, err)
-	urlService := service.NewShortenerService(repository)
-	shortenerHandlers := NewShortenerHandlers(urlService, config)
-
 	type want struct {
 		contentType string
 		respBody    string
@@ -227,30 +321,83 @@ func TestShortenerHandlersCreateShortURLJson(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			reqBody := bytes.NewReader([]byte(tt.reqBody))
-			request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
-			request.Header.Add("Content-Type", tt.reqContentType)
-			w := httptest.NewRecorder()
-			shortenerHandlers.CreateShortURLJson(w, request)
-			result := w.Result()
+	t.Run("in memory db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        "",
+		}
 
-			resultURL, err := io.ReadAll(result.Body)
-			require.NoError(t, err)
-			err = result.Body.Close()
-			require.NoError(t, err)
-			resultString := string(resultURL)
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				reqBody := bytes.NewReader([]byte(tt.reqBody))
+				request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
+				request.Header.Add("Content-Type", tt.reqContentType)
+				w := httptest.NewRecorder()
+				shortenerHandlers.CreateShortURLJson(w, request)
+				result := w.Result()
 
-			assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
-			assert.Equal(t, tt.want.respBody, resultString)
-			assert.Equal(t, tt.want.statusCode, result.StatusCode)
-		})
-	}
+				resultURL, err := io.ReadAll(result.Body)
+				require.NoError(t, err)
+				err = result.Body.Close()
+				require.NoError(t, err)
+				resultString := string(resultURL)
+
+				assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
+				assert.Equal(t, tt.want.respBody, resultString)
+				assert.Equal(t, tt.want.statusCode, result.StatusCode)
+			})
+		}
+	})
+	t.Run("postgres db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        SetDSNForTests(),
+		}
+		// drop table for tests:
+		db, err := storage.NewDBRepository(config)
+		require.NoError(t, err)
+		err = db.DropTableURLS()
+		require.NoError(t, err)
+
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				reqBody := bytes.NewReader([]byte(tt.reqBody))
+				request := httptest.NewRequest(http.MethodPost, tt.requestURL, reqBody)
+				request.Header.Add("Content-Type", tt.reqContentType)
+				w := httptest.NewRecorder()
+				shortenerHandlers.CreateShortURLJson(w, request)
+				result := w.Result()
+
+				resultURL, err := io.ReadAll(result.Body)
+				require.NoError(t, err)
+				err = result.Body.Close()
+				require.NoError(t, err)
+				resultString := string(resultURL)
+
+				assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))
+				assert.Equal(t, tt.want.respBody, resultString)
+				assert.Equal(t, tt.want.statusCode, result.StatusCode)
+			})
+		}
+	})
+
 }
 
 func TestShortenerHandlersCheckDatabaseConnection(t *testing.T) {
-	t.Run("Negative test #1", func(t *testing.T) {
+	t.Run("in memory db:", func(t *testing.T) {
 		config := &config.Options{
 			RunAddr:            ":8080",
 			ResponseResultAddr: "http://localhost:8080",
@@ -270,38 +417,37 @@ func TestShortenerHandlersCheckDatabaseConnection(t *testing.T) {
 
 		assert.Equal(t, 405, result.StatusCode)
 	})
+	t.Run("postgres db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        SetDSNForTests(),
+		}
+
+		// drop table for tests:
+		db, err := storage.NewDBRepository(config)
+		require.NoError(t, err)
+		err = db.DropTableURLS()
+		require.NoError(t, err)
+
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080/ping", nil)
+		w := httptest.NewRecorder()
+		shortenerHandlers.CheckDatabaseConnection(w, request)
+		result := w.Result()
+		defer result.Body.Close()
+
+		assert.Equal(t, 200, result.StatusCode)
+	})
+
 }
 
 func TestShortenerHandlersCreateShortURLBatch(t *testing.T) {
-	config := &config.Options{
-		RunAddr:            ":8080",
-		ResponseResultAddr: "http://localhost:8080",
-		FileStorage:        "",
-		DataBaseDSN:        "",
-	}
-	repository, err := storage.NewRepository(config)
-	require.NoError(t, err)
-	urlService := service.NewShortenerService(repository)
-	shortenerHandlers := NewShortenerHandlers(urlService, config)
-
-	router := NewShortenerRouter(shortenerHandlers)
-	require.NoError(t, err)
-
-	// formedURL := storage.FormedURL{
-	// 	LongURL:       "https://yandex.ru",
-	// 	ShortenedURL:  "aHR0cHM6Ly95YW5kZXgucnU",
-	// 	CorrelationID: "123",
-	// }
-	// err = shortenerHandlers.shortenerService.CreateShortURL(&formedURL)
-	// require.NoError(t, err)
-	// formedURL = storage.FormedURL{
-	// 	LongURL:       "https://vk.com",
-	// 	ShortenedURL:  "aHR0cHM6Ly92ay5jb20",
-	// 	CorrelationID: "321",
-	// }
-	// err = shortenerHandlers.shortenerService.CreateShortURL(&formedURL)
-	// require.NoError(t, err)
-
 	type want struct {
 		responseBatch []BatchShortened
 		statusCode    int
@@ -341,48 +487,98 @@ func TestShortenerHandlersCreateShortURLBatch(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	t.Run("in memory db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        "",
+		}
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
 
-			server := httptest.NewServer(router)
-			defer server.Close()
-			bodyBytes, err := json.Marshal(tt.requestBatch)
-			require.NoError(t, err)
-			body := bytes.NewBuffer(bodyBytes)
-			request, err := http.NewRequest(http.MethodPost, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), body)
-			require.NoError(t, err)
-			client := &http.Client{}
-			resp, err := client.Do(request)
-			require.NoError(t, err)
+		router := NewShortenerRouter(shortenerHandlers)
+		require.NoError(t, err)
 
-			respBody, err := io.ReadAll(resp.Body)
-			require.NoError(t, err)
-			defer resp.Body.Close()
-			responseBatch := make([]BatchShortened, len(tt.requestBatch))
-			err = json.Unmarshal(respBody, &responseBatch)
-			require.NoError(t, err)
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
 
-			assert.Equal(t, tt.want.responseBatch, responseBatch)
-			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
-		})
-	}
+				server := httptest.NewServer(router)
+				defer server.Close()
+				bodyBytes, err := json.Marshal(tt.requestBatch)
+				require.NoError(t, err)
+				body := bytes.NewBuffer(bodyBytes)
+				request, err := http.NewRequest(http.MethodPost, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), body)
+				require.NoError(t, err)
+				client := &http.Client{}
+				resp, err := client.Do(request)
+				require.NoError(t, err)
+
+				respBody, err := io.ReadAll(resp.Body)
+				require.NoError(t, err)
+				defer resp.Body.Close()
+				responseBatch := make([]BatchShortened, len(tt.requestBatch))
+				err = json.Unmarshal(respBody, &responseBatch)
+				require.NoError(t, err)
+
+				assert.Equal(t, tt.want.responseBatch, responseBatch)
+				assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+			})
+		}
+	})
+	t.Run("postgres db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        SetDSNForTests(),
+		}
+		// drop table for tests:
+		db, err := storage.NewDBRepository(config)
+		require.NoError(t, err)
+		err = db.DropTableURLS()
+		require.NoError(t, err)
+
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+		router := NewShortenerRouter(shortenerHandlers)
+		require.NoError(t, err)
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+
+				server := httptest.NewServer(router)
+				defer server.Close()
+				bodyBytes, err := json.Marshal(tt.requestBatch)
+				require.NoError(t, err)
+				body := bytes.NewBuffer(bodyBytes)
+				request, err := http.NewRequest(http.MethodPost, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), body)
+				require.NoError(t, err)
+				client := &http.Client{}
+				resp, err := client.Do(request)
+				require.NoError(t, err)
+
+				respBody, err := io.ReadAll(resp.Body)
+				require.NoError(t, err)
+				defer resp.Body.Close()
+				responseBatch := make([]BatchShortened, len(tt.requestBatch))
+				err = json.Unmarshal(respBody, &responseBatch)
+				require.NoError(t, err)
+
+				assert.Equal(t, tt.want.responseBatch, responseBatch)
+				assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+			})
+		}
+	})
+
 }
 
 func TestShortenerHandlersGetAllURLByID(t *testing.T) {
-	config := &config.Options{
-		RunAddr:            ":8080",
-		ResponseResultAddr: "http://localhost:8080",
-		FileStorage:        "",
-		DataBaseDSN:        "",
-	}
-	repository, err := storage.NewRepository(config)
-	require.NoError(t, err)
-	urlService := service.NewShortenerService(repository)
-	shortenerHandlers := NewShortenerHandlers(urlService, config)
-
-	router := NewShortenerRouter(shortenerHandlers)
-	require.NoError(t, err)
-
 	type want struct {
 		responseBatch []model.FormedURL
 		statusCode    int
@@ -414,63 +610,128 @@ func TestShortenerHandlersGetAllURLByID(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	t.Run("in memory db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        "",
+		}
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
 
-			server := httptest.NewServer(router)
-			defer server.Close()
-			// first add some urls by user with cookie user_id
-			cookie := &http.Cookie{Name: "user_id", Value: tt.cookieVal}
-			if tt.addURLs != nil {
-				for _, addURL := range tt.addURLs {
-					body := bytes.NewBuffer([]byte(addURL))
-					req, err := http.NewRequest(http.MethodPost, server.URL, body)
-					require.NoError(t, err)
-					req.AddCookie(cookie)
-					req.Header.Set("Content-Type", "text/html")
-					resp, err := http.DefaultClient.Do(req)
-					require.NoError(t, err)
-					resp.Body.Close()
-					fmt.Printf("%+v", req)
-					require.Equal(t, 201, resp.StatusCode)
+		router := NewShortenerRouter(shortenerHandlers)
+		require.NoError(t, err)
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+
+				server := httptest.NewServer(router)
+				defer server.Close()
+				// first add some urls by user with cookie user_id
+				cookie := &http.Cookie{Name: "user_id", Value: tt.cookieVal}
+				if tt.addURLs != nil {
+					for _, addURL := range tt.addURLs {
+						body := bytes.NewBuffer([]byte(addURL))
+						req, err := http.NewRequest(http.MethodPost, server.URL, body)
+						require.NoError(t, err)
+						req.AddCookie(cookie)
+						req.Header.Set("Content-Type", "text/html")
+						resp, err := http.DefaultClient.Do(req)
+						require.NoError(t, err)
+						resp.Body.Close()
+						fmt.Printf("%+v", req)
+						require.Equal(t, 201, resp.StatusCode)
+					}
 				}
-			}
 
-			request, err := http.NewRequest(http.MethodGet, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), nil)
-			request.AddCookie(cookie)
-			require.NoError(t, err)
-			client := &http.Client{}
-			resp, err := client.Do(request)
-			require.NoError(t, err)
+				request, err := http.NewRequest(http.MethodGet, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), nil)
+				request.AddCookie(cookie)
+				require.NoError(t, err)
+				client := &http.Client{}
+				resp, err := client.Do(request)
+				require.NoError(t, err)
 
-			respBody, err := io.ReadAll(resp.Body)
-			require.NoError(t, err)
-			defer resp.Body.Close()
-			responseBatch := make([]model.FormedURL, len(tt.want.responseBatch))
-			err = json.Unmarshal(respBody, &responseBatch)
-			require.NoError(t, err)
+				respBody, err := io.ReadAll(resp.Body)
+				require.NoError(t, err)
+				defer resp.Body.Close()
+				responseBatch := make([]model.FormedURL, len(tt.want.responseBatch))
+				err = json.Unmarshal(respBody, &responseBatch)
+				require.NoError(t, err)
 
-			assert.ObjectsAreEqualValues(tt.want.responseBatch, responseBatch)
-			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
-		})
-	}
+				assert.ObjectsAreEqualValues(tt.want.responseBatch, responseBatch)
+				assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+			})
+		}
+	})
+	t.Run("postgres db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        SetDSNForTests(),
+		}
+		// drop table for tests:
+		db, err := storage.NewDBRepository(config)
+		require.NoError(t, err)
+		err = db.DropTableURLS()
+		require.NoError(t, err)
+
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+		router := NewShortenerRouter(shortenerHandlers)
+		require.NoError(t, err)
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+
+				server := httptest.NewServer(router)
+				defer server.Close()
+				// first add some urls by user with cookie user_id
+				cookie := &http.Cookie{Name: "user_id", Value: tt.cookieVal}
+				if tt.addURLs != nil {
+					for _, addURL := range tt.addURLs {
+						body := bytes.NewBuffer([]byte(addURL))
+						req, err := http.NewRequest(http.MethodPost, server.URL, body)
+						require.NoError(t, err)
+						req.AddCookie(cookie)
+						req.Header.Set("Content-Type", "text/html")
+						resp, err := http.DefaultClient.Do(req)
+						require.NoError(t, err)
+						resp.Body.Close()
+						fmt.Printf("%+v", req)
+						require.Equal(t, 201, resp.StatusCode)
+					}
+				}
+
+				request, err := http.NewRequest(http.MethodGet, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), nil)
+				request.AddCookie(cookie)
+				require.NoError(t, err)
+				client := &http.Client{}
+				resp, err := client.Do(request)
+				require.NoError(t, err)
+
+				respBody, err := io.ReadAll(resp.Body)
+				require.NoError(t, err)
+				defer resp.Body.Close()
+				responseBatch := make([]model.FormedURL, len(tt.want.responseBatch))
+				err = json.Unmarshal(respBody, &responseBatch)
+				require.NoError(t, err)
+
+				assert.ObjectsAreEqualValues(tt.want.responseBatch, responseBatch)
+				assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+			})
+		}
+	})
+
 }
 
 func TestShortenerHandlersDeleteURLBatch(t *testing.T) {
-	config := &config.Options{
-		RunAddr:            ":8080",
-		ResponseResultAddr: "http://localhost:8080",
-		FileStorage:        "",
-		DataBaseDSN:        "",
-	}
-	repository, err := storage.NewRepository(config)
-	require.NoError(t, err)
-	urlService := service.NewShortenerService(repository)
-	shortenerHandlers := NewShortenerHandlers(urlService, config)
-
-	router := NewShortenerRouter(shortenerHandlers)
-	require.NoError(t, err)
-
 	type want struct {
 		statusCode int
 	}
@@ -491,27 +752,140 @@ func TestShortenerHandlersDeleteURLBatch(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	t.Run("in memory db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        "",
+		}
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
 
-			server := httptest.NewServer(router)
-			defer server.Close()
-			cookie := &http.Cookie{Name: "user_id", Value: "30316566613236612d656333362d366533362d383031362d303031353564623832353563f8c1885334e5c310884a9af35b2f189228001d67f322295417f17ff534a88b99"}
+		router := NewShortenerRouter(shortenerHandlers)
+		require.NoError(t, err)
 
-			rBody, err := json.Marshal(tt.deleteURLs)
-			require.NoError(t, err)
-			body := bytes.NewBuffer(rBody)
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
 
-			request, err := http.NewRequest(http.MethodDelete, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), body)
-			request.AddCookie(cookie)
-			request.Header.Set("Content-Type", tt.contentType)
-			require.NoError(t, err)
-			client := &http.Client{}
-			resp, err := client.Do(request)
-			require.NoError(t, err)
-			defer resp.Body.Close()
+				server := httptest.NewServer(router)
+				defer server.Close()
+				cookie := &http.Cookie{Name: "user_id", Value: "30316566613236612d656333362d366533362d383031362d303031353564623832353563f8c1885334e5c310884a9af35b2f189228001d67f322295417f17ff534a88b99"}
 
-			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
-		})
-	}
+				rBody, err := json.Marshal(tt.deleteURLs)
+				require.NoError(t, err)
+				body := bytes.NewBuffer(rBody)
+
+				request, err := http.NewRequest(http.MethodDelete, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), body)
+				request.AddCookie(cookie)
+				request.Header.Set("Content-Type", tt.contentType)
+				require.NoError(t, err)
+				client := &http.Client{}
+				resp, err := client.Do(request)
+				require.NoError(t, err)
+				defer resp.Body.Close()
+
+				assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+			})
+		}
+	})
+	t.Run("postgres db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        SetDSNForTests(),
+		}
+		// drop table for tests:
+		db, err := storage.NewDBRepository(config)
+		require.NoError(t, err)
+		err = db.DropTableURLS()
+		require.NoError(t, err)
+
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+		router := NewShortenerRouter(shortenerHandlers)
+		require.NoError(t, err)
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+
+				server := httptest.NewServer(router)
+				defer server.Close()
+				cookie := &http.Cookie{Name: "user_id", Value: "30316566613236612d656333362d366533362d383031362d303031353564623832353563f8c1885334e5c310884a9af35b2f189228001d67f322295417f17ff534a88b99"}
+
+				rBody, err := json.Marshal(tt.deleteURLs)
+				require.NoError(t, err)
+				body := bytes.NewBuffer(rBody)
+
+				request, err := http.NewRequest(http.MethodDelete, server.URL+`/`+strings.TrimPrefix(tt.requestURL, "http://localhost:8080/"), body)
+				request.AddCookie(cookie)
+				request.Header.Set("Content-Type", tt.contentType)
+				require.NoError(t, err)
+				client := &http.Client{}
+				resp, err := client.Do(request)
+				require.NoError(t, err)
+				defer resp.Body.Close()
+
+				assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+			})
+		}
+	})
+
+}
+
+func TestShortenerHandlersGetInternalStats(t *testing.T) {
+	t.Run("in memory db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        "",
+			TrustedSubnet:      "::1/128",
+		}
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080//api/internal/stats", nil)
+		w := httptest.NewRecorder()
+		shortenerHandlers.GetInternalStats(w, request)
+		result := w.Result()
+		defer result.Body.Close()
+
+		assert.Equal(t, 200, result.StatusCode)
+	})
+	t.Run("postgres db:", func(t *testing.T) {
+		config := &config.Options{
+			RunAddr:            ":8080",
+			ResponseResultAddr: "http://localhost:8080",
+			FileStorage:        "",
+			DataBaseDSN:        SetDSNForTests(),
+			TrustedSubnet:      "::1/128",
+		}
+		// drop table for tests:
+		db, err := storage.NewDBRepository(config)
+		require.NoError(t, err)
+		err = db.DropTableURLS()
+		require.NoError(t, err)
+
+		repository, err := storage.NewRepository(config)
+		require.NoError(t, err)
+		urlService := service.NewShortenerService(repository)
+		shortenerHandlers := NewShortenerHandlers(urlService, config)
+
+		request := httptest.NewRequest(http.MethodGet, "http://localhost:8080//api/internal/stats", nil)
+		w := httptest.NewRecorder()
+		shortenerHandlers.GetInternalStats(w, request)
+		result := w.Result()
+		defer result.Body.Close()
+
+		assert.Equal(t, 200, result.StatusCode)
+	})
 }

@@ -56,6 +56,7 @@ func (s *ShortenerHandlers) CreateShortURL(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		log.Println("Cant save urls to storage ", err)
+
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -134,7 +135,9 @@ func (s *ShortenerHandlers) CreateShortURLJson(w http.ResponseWriter, r *http.Re
 
 		}
 		log.Println("Cant save urls to storage", err)
+
 		w.WriteHeader(http.StatusInternalServerError)
+
 		return
 	}
 
@@ -270,4 +273,24 @@ func (s *ShortenerHandlers) DeleteURLBatch(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
+}
+
+// GetInternalStats sends url stats if the connection is trusted.
+func (s *ShortenerHandlers) GetInternalStats(w http.ResponseWriter, r *http.Request) {
+
+	statsResponse, err := s.shortenerService.GetURLUserStats()
+	if err != nil {
+		log.Println("err GetURLUserStats", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	resp, err := json.Marshal(statsResponse)
+	if err != nil {
+		log.Println("can`t marshal stats response", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
 }

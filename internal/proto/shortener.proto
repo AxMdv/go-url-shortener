@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package shortener;
+option go_package = "github.com/AxMdv/go-url-shortener/internal/shortenerpb";
+
+import "google/protobuf/empty.proto";
+
+// Request Response CheckDatabaseConnection
+service Shortener {
+    rpc CreateShortURL(CreateShortURLRequest) returns (CreateShortURLResponse);
+    rpc GetLongURL(GetLongURLRequest) returns (GetLongURLResponse);
+    rpc CheckDatabaseConnection(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc CreateShortURLBatch(CreateShortURLBatchRequest) returns (CreateShortURLBatchResponse);
+}
+
+message CreateShortURLRequest {
+    string long_url = 1;
+}
+
+message CreateShortURLResponse {
+    string shortened_url = 1;
+}
+
+message GetLongURLRequest {
+    string shortened_url = 1;
+}
+
+message GetLongURLResponse {
+    string long_url = 1;
+}
+
+message CreateShortURLBatchRequest {
+    message BatchOriginal {
+        string correlation_id = 1;
+        string original_url = 2;
+    }
+    repeated BatchOriginal original_batches = 1;
+}
+
+message CreateShortURLBatchResponse {
+	message BatchShortened {
+        string correlation_id = 1;
+        string short_url = 2;
+    }
+    repeated BatchShortened shortened_batches = 1;
+}

@@ -136,6 +136,9 @@ func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]mode
 	if err != nil {
 		return nil, err
 	}
+	if len(resultFormedURL) == 0 {
+		return nil, NewNoContentError(ErrNoContent, uuid)
+	}
 	return resultFormedURL, nil
 }
 
@@ -180,6 +183,19 @@ func (dr *DBRepository) GetFlagByShortURL(ctx context.Context, shortenedURL stri
 	return deleted, nil
 }
 
+// GetNumberOfURLAndUser returns number of shortened urls and number of users.
+func (dr *DBRepository) GetNumberOfURLAndUser(ctx context.Context) (model.URLUserStats, error) {
+	stats := model.URLUserStats{}
+	query := `
+	SELECT COUNT(shortened_url), COUNT(uuid) from urls;
+	`
+	row := dr.db.QueryRow(ctx, query)
+
+	err := row.Scan(&stats.Urls, &stats.Users)
+
+	return stats, err
+}
+
 func (dr *DBRepository) createDB(ctx context.Context) error {
 	query := `
 		CREATE TABLE IF NOT EXISTS urls (
@@ -190,5 +206,12 @@ func (dr *DBRepository) createDB(ctx context.Context) error {
 		CONSTRAINT urls_pk PRIMARY KEY (shortened_url)
 		);`
 	_, err := dr.db.Exec(ctx, query)
+	return err
+}
+
+// DropTableURLS drops table if it exists.
+func (dr *DBRepository) DropTableURLS() error {
+	query := `DROP TABLE IF EXISTS urls ;`
+	_, err := dr.db.Exec(context.Background(), query)
 	return err
 }

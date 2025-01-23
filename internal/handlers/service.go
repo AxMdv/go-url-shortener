@@ -14,4 +14,5 @@ type IShortenerService interface {
 	GetAllURLByID(string) ([]model.FormedURL, error)
 	DeleteURLBatch(model.DeleteBatch) error
 	GetFlagByShortURL(shortURL string) (isDeleted bool, err error)
+	GetURLUserStats() (model.URLUserStats, error)
 }

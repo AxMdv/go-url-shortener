@@ -138,6 +138,13 @@ func (fr *FileRepository) GetFlagByShortURL(_ context.Context, shortenedURL stri
 	return fr.MapDeleted[shortenedURL], nil
 }
 
+// GetNumberOfURLAndUser returns number of shortened urls and number of users.
+func (fr *FileRepository) GetNumberOfURLAndUser(_ context.Context) (model.URLUserStats, error) {
+	urslNum := len(fr.MapURL)
+	usersNum := len(fr.MapUUID)
+	return model.URLUserStats{Urls: urslNum, Users: usersNum}, nil
+}
+
 // Close closes file of FileRepository.
 func (fr *FileRepository) Close() error {
 	err := fr.URLSaver.Close()
