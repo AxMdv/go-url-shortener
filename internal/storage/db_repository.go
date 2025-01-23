@@ -136,6 +136,9 @@ func (dr *DBRepository) GetURLByUserID(ctx context.Context, uuid string) ([]mode
 	if err != nil {
 		return nil, err
 	}
+	if len(resultFormedURL) == 0 {
+		return nil, NewNoContentError(ErrNoContent, uuid)
+	}
 	return resultFormedURL, nil
 }
 
@@ -188,7 +191,7 @@ func (dr *DBRepository) GetNumberOfURLAndUser(ctx context.Context) (model.URLUse
 	`
 	row := dr.db.QueryRow(ctx, query)
 
-	err := row.Scan(&stats)
+	err := row.Scan(&stats.Urls, &stats.Users)
 
 	return stats, err
 }
@@ -206,10 +209,9 @@ func (dr *DBRepository) createDB(ctx context.Context) error {
 	return err
 }
 
-// DropTable drops table if it exists.
-func (dr *DBRepository) DropTable(tablename string) error {
-	query := `
-		DROP TABLE IF EXISTS urls;`
+// DropTableURLS drops table if it exists.
+func (dr *DBRepository) DropTableURLS() error {
+	query := `DROP TABLE IF EXISTS urls ;`
 	_, err := dr.db.Exec(context.Background(), query)
 	return err
 }

@@ -100,7 +100,7 @@ func TestCreateShortURL(t *testing.T) {
 		// drop table for tests:
 		db, err := storage.NewDBRepository(config)
 		require.NoError(t, err)
-		err = db.DropTable("urls")
+		err = db.DropTableURLS()
 		require.NoError(t, err)
 
 		repository, err := storage.NewRepository(config)
@@ -239,7 +239,7 @@ func TestShortenerHandlersGetLongURL(t *testing.T) {
 		// drop table for tests:
 		db, err := storage.NewDBRepository(config)
 		require.NoError(t, err)
-		err = db.DropTable("urls")
+		err = db.DropTableURLS()
 		require.NoError(t, err)
 
 		repository, err := storage.NewRepository(config)
@@ -364,7 +364,7 @@ func TestShortenerHandlersCreateShortURLJson(t *testing.T) {
 		// drop table for tests:
 		db, err := storage.NewDBRepository(config)
 		require.NoError(t, err)
-		err = db.DropTable("urls")
+		err = db.DropTableURLS()
 		require.NoError(t, err)
 
 		repository, err := storage.NewRepository(config)
@@ -428,7 +428,7 @@ func TestShortenerHandlersCheckDatabaseConnection(t *testing.T) {
 		// drop table for tests:
 		db, err := storage.NewDBRepository(config)
 		require.NoError(t, err)
-		err = db.DropTable("urls")
+		err = db.DropTableURLS()
 		require.NoError(t, err)
 
 		repository, err := storage.NewRepository(config)
@@ -538,7 +538,7 @@ func TestShortenerHandlersCreateShortURLBatch(t *testing.T) {
 		// drop table for tests:
 		db, err := storage.NewDBRepository(config)
 		require.NoError(t, err)
-		err = db.DropTable("urls")
+		err = db.DropTableURLS()
 		require.NoError(t, err)
 
 		repository, err := storage.NewRepository(config)
@@ -676,7 +676,7 @@ func TestShortenerHandlersGetAllURLByID(t *testing.T) {
 		// drop table for tests:
 		db, err := storage.NewDBRepository(config)
 		require.NoError(t, err)
-		err = db.DropTable("urls")
+		err = db.DropTableURLS()
 		require.NoError(t, err)
 
 		repository, err := storage.NewRepository(config)
@@ -801,7 +801,7 @@ func TestShortenerHandlersDeleteURLBatch(t *testing.T) {
 		// drop table for tests:
 		db, err := storage.NewDBRepository(config)
 		require.NoError(t, err)
-		err = db.DropTable("urls")
+		err = db.DropTableURLS()
 		require.NoError(t, err)
 
 		repository, err := storage.NewRepository(config)
@@ -872,7 +872,7 @@ func TestShortenerHandlersGetInternalStats(t *testing.T) {
 		// drop table for tests:
 		db, err := storage.NewDBRepository(config)
 		require.NoError(t, err)
-		err = db.DropTable("urls")
+		err = db.DropTableURLS()
 		require.NoError(t, err)
 
 		repository, err := storage.NewRepository(config)
@@ -886,6 +886,6 @@ func TestShortenerHandlersGetInternalStats(t *testing.T) {
 		result := w.Result()
 		defer result.Body.Close()
 
-		assert.Equal(t, 500, result.StatusCode)
+		assert.Equal(t, 200, result.StatusCode)
 	})
 }
