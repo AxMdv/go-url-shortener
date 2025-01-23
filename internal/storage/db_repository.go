@@ -205,3 +205,11 @@ func (dr *DBRepository) createDB(ctx context.Context) error {
 	_, err := dr.db.Exec(ctx, query)
 	return err
 }
+
+// DropTable drops table if it exists.
+func (dr *DBRepository) DropTable(tablename string) error {
+	query := `
+		DROP TABLE IF EXISTS urls;`
+	_, err := dr.db.Exec(context.Background(), query)
+	return err
+}
